@@ -67,8 +67,9 @@ int fx;           /* sum of the cost of the columns selected in the solution (ca
 /**       these are just examples of useful variables.                                          **/
 /**       these variables need to be updated every time a column is added to a partial solution **/
 /**       or when a complete solution is modified*/
-int *col_cover;   /* col_colver[i] selected columns that cover row i */
-int ncol_cover;   /* number of selected columns that cover row i */
+int used_sets;
+int **col_cover;   /* col_colver[i] selected columns that cover row i */
+int *ncol_cover;   /* number of selected columns that cover row i */
 
 void usage(){
     printf("\nUSAGE: lsscp [param_name, param_value] [options]...\n");
@@ -223,9 +224,14 @@ void initialize(){
     y = (int *) mymalloc(m*sizeof(int));
     for (i = 0; i < m; i++) y[i] = 0;
     
-    col_cover = (int *) mymalloc(m*sizeof(int));
-    ncol_cover = (int) mymalloc(m*sizeof(int));
+    col_cover = (int **) mymalloc(m*sizeof(int));
+    for (i=0; i<m; i++)
+        col_cover[i] = (int *) mymalloc(ncol[i]*sizeof(int));
+
+    ncol_cover = (int *) mymalloc(m*sizeof(int));
+    for (i = 0; i<m; i++) ncol_cover[i] = 0;
     fx = 0;
+    used_sets = 0;
 }
 
 /** Check if some elements aren't covered by a set yet in the current solution **/
@@ -263,7 +269,7 @@ int choose_set() {
             //Calculate cost according to chosen algorithm
             if(ch2) current_cost = cost[i];
             else if(ch3) current_cost = (float) cost[i] /  (float) nrow[i];
-            else current_cost = (float) cost[i] /  (float) added_elements(i);
+            else current_cost = (float) cost[i] /  (float) extra_covered;
             
             if (current_cost < best_cost && !x[i] && best_cost >= 0) { //Cost of set we're handling is better than the best one we currently have
                 best_set = i;
@@ -288,14 +294,64 @@ void execute() {
     int chosen_set; // Set chosen by algorithm
     while (uncovered_elements()) {
         chosen_set = choose_set();
-        for (int i = 0; i < nrow[chosen_set]; i++) //Say that we cover each element that the chosen set covers
+        for (int i = 0; i < nrow[chosen_set]; i++) { //Say that we cover each element that the chosen set covers
             y[row[chosen_set][i]] = 1;
+            col_cover[i][ncol_cover[i]] = chosen_set;
+            ncol_cover[i]++;
+        }
+        used_sets++;
         x[chosen_set] = 1;
         fx += cost[chosen_set];
     }
     printf("Done! Resulting cost: %i\n", fx);
 }
 
+void redundancy_elimination() {
+    int i, current_weight, max_weight_set, max_weight, can_remove, covered_by_set;
+    int *tried = (int *) mymalloc(n*sizeof(int));
+    for (i = 0; i < n; i++) tried[i] = 0;
+    while (used_sets) {
+        max_weight_set = 0;
+        max_weight = 0;
+        for (i = 0; i < n; i++) {
+            current_weight = cost[i];
+            if (x[i] && cost[i] > max_weight && !tried[i]) {
+                max_weight_set = i;
+                max_weight = current_weight;
+            }
+        }
+        used_sets--;
+        tried[max_weight_set] = 1;
+        can_remove = 1;
+        covered_by_set = 0;
+        for (i = 0; i < m; i++) {
+            for (int j = 0; j < ncol_cover[i]; j++) {
+                if(col_cover[i][j] == max_weight_set) {
+                    covered_by_set = 1;
+                    break;
+                }
+                if (covered_by_set && ncol_cover[i] == 1) {
+                    can_remove = 0;
+                    break;
+                }
+            }
+        }
+        if (can_remove) {
+            x[max_weight_set] = 0;
+            fx -= max_weight;
+            for (i = 0; i < m; i++) {
+                for (int j = 0; j < ncol_cover[i]; j++) {
+                    if(col_cover[i][j] == max_weight_set) {
+                        ncol_cover[i]--;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    printf("Cost after RE: %i\n", fx);
+    return;
+}
 
 /*** Use this function to finalize execution */
 void finalize(){
@@ -304,6 +360,8 @@ void finalize(){
     free((void *) nrow );
     free((void *) ncol );
     free((void *) cost );
+    free((void **) col_cover);
+    free((void *) ncol_cover);
 }
 
 int main(int argc, char *argv[]) {
@@ -313,6 +371,7 @@ int main(int argc, char *argv[]) {
     //print_instance(0);
     initialize();
     execute();
+    if (re) redundancy_elimination();
     finalize();
     return EXIT_SUCCESS;
 }
