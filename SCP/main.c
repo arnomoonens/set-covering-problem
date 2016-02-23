@@ -259,14 +259,19 @@ int choose_set() {
         int extra_covered;
         for (int i = 0; i < n; i++) {
             extra_covered = added_elements(i);
-            if(extra_covered == 0) continue;
+            if(extra_covered == 0) continue; //Skip the set if it doesn't cover elements that weren't covered yet
+            //Calculate cost according to chosen algorithm
             if(ch2) current_cost = cost[i];
             else if(ch3) current_cost = (float) cost[i] /  (float) nrow[i];
             else current_cost = (float) cost[i] /  (float) added_elements(i);
-            if ((current_cost < best_cost) && !x[i] && (best_cost >= 0)) {
+            
+            if (current_cost < best_cost && !x[i] && best_cost >= 0) { //Cost of set we're handling is better than the best one we currently have
                 best_set = i;
                 best_cost = current_cost;
-            } else if (!x[i] && (best_cost < 0)) {
+            } else if (current_cost == best_cost && nrow[i] > nrow[best_set] && !x[i] && best_cost >= 0) { //Cost is equal but new one covers more elements
+                best_set = i;
+                best_cost = current_cost;
+            } else if (!x[i] && (best_cost < 0)) { //Initialize index and cost with the first set that isn't already included (and isn't redundant)
                 best_set = i;
                 best_cost = current_cost;
             }
@@ -281,24 +286,12 @@ int choose_set() {
 /*** Build solution ***/
 void execute() {
     int chosen_set; // Set chosen by algorithm
-    int covered_elements; // Set covered elements that were still uncovered
-    int covered_by_set; // Index of an element covered by the chosen set
     while (uncovered_elements()) {
-        covered_elements = 0;
         chosen_set = choose_set();
-//        printf("Chosen set: %i\n", chosen_set);
-        for (int i = 0; i < nrow[chosen_set]; i++) {
-            covered_by_set = row[chosen_set][i];
-            if (!y[covered_by_set]) {
-                y[covered_by_set] = 1;
-                covered_elements = 1;
-            }
-        }
-        if (covered_elements) {
-            x[chosen_set] = 1;
-            fx += cost[chosen_set];
-        }
-        
+        for (int i = 0; i < nrow[chosen_set]; i++) //Say that we cover each element that the chosen set covers
+            y[row[chosen_set][i]] = 1;
+        x[chosen_set] = 1;
+        fx += cost[chosen_set];
     }
     printf("Done! Resulting cost: %i\n", fx);
 }
