@@ -288,8 +288,8 @@ int choose_set(struct Solution sol, int exclude_set) {
             if(extra_covered == 0 || i == exclude_set) continue; //Skip the set if it doesn't cover elements that weren't covered yet
             //Calculate cost according to chosen algorithm
             if(ch2) current_cost = cost[i];
-            else if(ch3) current_cost = (float) cost[i] /  (float) nrow[i];
-            else current_cost = (float) cost[i] /  (float) extra_covered;
+            else if(ch3) current_cost = (float) cost[i] / (float) nrow[i];
+            else current_cost = (float) cost[i] / (float) extra_covered;
             
             if (current_cost < best_cost && !sol.x[i] && best_cost >= 0) { //Cost of set we're handling is better than the best one we currently have
                 best_set = i;
@@ -340,23 +340,29 @@ struct Solution remove_set(struct Solution sol, int set) {
     return sol;
 }
 
+int find_max_weight_set(struct Solution sol, int * exclude_sets) {
+    int current_weight;
+    int max_weight_set = 0;
+    int max_weight = 0;
+    for (int i = 0; i < n; i++) {
+        current_weight = cost[i];
+        if (sol.x[i] && cost[i] > max_weight && !exclude_sets[i]) {
+            max_weight_set = i;
+            max_weight = current_weight;
+}
+    }
+    return max_weight_set;
+}
+
 /*** Remove redundant sets from the solution***/
 struct Solution redundancy_elimination(struct Solution sol) {
-    int i, current_weight, max_weight_set, max_weight, can_remove, covered_by_set;
+    int i, max_weight_set, can_remove, covered_by_set;
     int *tried = (int *) mymalloc(n*sizeof(int));
     for (i = 0; i < n; i++) tried[i] = 0;
         int counter = sol.used_sets;
         while (counter) {
-            max_weight_set = 0;
-            max_weight = 0;
-            for (i = 0; i < n; i++) {
-                current_weight = cost[i];
-                if (sol.x[i] && cost[i] > max_weight && !tried[i]) {
-                    max_weight_set = i;
-                    max_weight = current_weight;
-                }
-            }
             counter--;
+            max_weight_set = find_max_weight_set(sol, tried);
             tried[max_weight_set] = 1;
             can_remove = 1;
             covered_by_set = 0;
@@ -388,7 +394,7 @@ struct Solution redundancy_elimination(struct Solution sol) {
  **/
 struct Solution best_improvement(struct Solution sol) {
     int improvement = 1;
-    int i, max_weight_set, max_weight, current_weight;
+    int max_weight_set;
     int *tried = (int *) mymalloc(n*sizeof(int));
     struct Solution best_solution = copy_solution(&sol);
     while (improvement) {
@@ -396,15 +402,7 @@ struct Solution best_improvement(struct Solution sol) {
         int counter = sol.used_sets;
         while (counter) {
             counter--;
-            max_weight_set = 0;
-            max_weight = 0;
-            for (i = 0; i < n; i++) {
-                current_weight = cost[i];
-                if (sol.x[i] && cost[i] > max_weight && !tried[i]) {
-                    max_weight_set = i;
-                    max_weight = current_weight;
-                }
-            }
+            max_weight_set = find_max_weight_set(sol, tried);
             tried[max_weight_set] = 1;
             struct Solution new_sol = copy_solution(&sol);
             new_sol = remove_set(new_sol, max_weight_set);
@@ -422,7 +420,30 @@ struct Solution best_improvement(struct Solution sol) {
 
 
 struct Solution first_improvement(struct Solution sol) {
-    return sol;
+    int improvement = 1;
+    int max_weight_set;
+    int *tried = (int *) mymalloc(n*sizeof(int));
+    struct Solution best_solution = copy_solution(&sol);
+    while (improvement) {
+        improvement = 0;
+        int counter = sol.used_sets;
+        while (counter) {
+            counter--;
+            max_weight_set = find_max_weight_set(sol, tried);
+            tried[max_weight_set] = 1;
+            struct Solution new_sol = copy_solution(&sol);
+            new_sol = remove_set(new_sol, max_weight_set);
+            new_sol = execute(new_sol, max_weight_set);
+            if(new_sol.fx < best_solution.fx) {
+                printf("Found new solution with fx %i instead of %i\n", new_sol.fx, best_solution.fx);
+                improvement = 1;
+                best_solution = new_sol;
+                best_solution = redundancy_elimination(best_solution);
+                break;
+            }
+        }
+    }
+    return best_solution;
 }
 
 /*** Use this function to finalize execution */
