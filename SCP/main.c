@@ -408,7 +408,7 @@ struct Solution best_improvement(struct Solution sol) {
             new_sol = remove_set(new_sol, max_weight_set);
             new_sol = execute(new_sol, max_weight_set);
             if(new_sol.fx < best_solution.fx) {
-                printf("Found new solution with fx %i instead of %i\n", new_sol.fx, best_solution.fx);
+//                printf("Found new solution with fx %i instead of %i\n", new_sol.fx, best_solution.fx);
                 improvement = 1;
                 best_solution = new_sol;
             }
@@ -435,7 +435,7 @@ struct Solution first_improvement(struct Solution sol) {
             new_sol = remove_set(new_sol, max_weight_set);
             new_sol = execute(new_sol, max_weight_set);
             if(new_sol.fx < best_solution.fx) {
-                printf("Found new solution with fx %i instead of %i\n", new_sol.fx, best_solution.fx);
+//                printf("Found new solution with fx %i instead of %i\n", new_sol.fx, best_solution.fx);
                 improvement = 1;
                 best_solution = new_sol;
                 best_solution = redundancy_elimination(best_solution);
@@ -464,19 +464,10 @@ int main(int argc, char *argv[]) {
     //print_instance(0);
     struct Solution sol = initialize();
     sol = execute(sol, -1); // index of set to exclude is set to -1: don't exlude a set from possible being used
-    printf("Cost after construction: %i\n", sol.fx);
-    if (re) {
-        sol = redundancy_elimination(sol);
-        printf("Cost after RE: %i\n", sol.fx);
-    }
-    if (bi) {
-        sol = best_improvement(sol);
-        printf("Cost after best improvement: %i\n", sol.fx);
-    }
-    else if (fi) {
-        sol = first_improvement(sol);
-        printf("Cost after first improvement: %i\n", sol.fx);
-    }
+    if (re) sol = redundancy_elimination(sol);
+    if (bi) sol = best_improvement(sol);
+    else if (fi) sol = first_improvement(sol);
+    printf("%i", sol.fx);
     finalize();
     return EXIT_SUCCESS;
 }
