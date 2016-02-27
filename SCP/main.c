@@ -84,9 +84,9 @@ struct Solution *copy_solution(struct Solution *source) {
     
     for (int i=0; i<m; i++)
         memcpy(&new_sol->col_cover[i], &source->col_cover[i], ncol[i] * sizeof(int));
-        memcpy(new_sol->ncol_cover, source->ncol_cover, m * sizeof(int));
-        
-        return new_sol;
+    memcpy(new_sol->ncol_cover, source->ncol_cover, m * sizeof(int));
+    
+    return new_sol;
 }
 
 void usage(){
@@ -243,7 +243,7 @@ struct Solution *initialize(){
     sol->y = (int *) mymalloc(m*sizeof(int));
     for (i = 0; i < m; i++) {sol->y[i] = 0;}
     
-    sol->col_cover = (int **) mymalloc(m*sizeof(int));
+    sol->col_cover = (int **) mymalloc(m*sizeof(int *));
     for (i=0; i<m; i++) {
         sol->col_cover[i] = (int *) mymalloc(ncol[i]*sizeof(int));
         for (int j = 0; j < ncol[i]; j++) {
@@ -321,10 +321,10 @@ void execute(struct Solution *sol, int exclude_set) {
         for (i = 0; i < nrow[chosen_set]; i++) { //Say that we cover each element that the chosen set covers
             element = row[chosen_set][i];
             sol->y[element] = 1;
-//            printf("sol->ncol_cover[element] of %i: %i\n", element, sol->ncol_cover[element]);
-//            sol->col_cover[element][sol->ncol_cover[element]] = chosen_set;
+            //            printf("sol->ncol_cover[element] of %i: %i\n", element, sol->ncol_cover[element]);
+            sol->col_cover[element][sol->ncol_cover[element]] = chosen_set;
             sol->ncol_cover[element]++;
-//            printf("Past this\n");
+            //            printf("Past this\n");
         }
         sol->used_sets++;
         sol->x[chosen_set] = 1;
@@ -376,7 +376,6 @@ void redundancy_elimination(struct Solution *sol) {
         for (i = 0; i < m; i++) {
             covered_by_set = 0;
             for (int j = 0; j < sol->ncol_cover[i]; j++) {
-//                printf("sol->col_cover[%i][%i], sol->ncol_cover[%i]=%i\n", i, j, i, sol->ncol_cover[i]);
                 if(sol->col_cover[i][j] == max_weight_set) {
                     covered_by_set = 1;
                     break;
@@ -417,7 +416,6 @@ struct Solution *best_improvement(struct Solution *sol) {
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
             if(new_sol->fx < best_solution->fx) {
-                //                printf("Found new solution with fx %i instead of %i\n", new_sol.fx, best_solution.fx);
                 improvement = 1;
                 best_solution = new_sol;
             }
@@ -473,14 +471,10 @@ int main(int argc, char *argv[]) {
     //print_instance(0);
     struct Solution *sol = initialize();
     execute(sol, -1); // index of set to exclude is set to -1: don't exlude a set from possible being used
-    printf("Cost before RE: %i, used sets: %i\n", sol->fx, sol->used_sets);
     if (re) redundancy_elimination(sol);
-    for (int i = 0; i < m; i++) {
-        printf("%i\n", sol->ncol_cover[i]);
-    }
     if (bi) sol = best_improvement(sol);
     else if (fi) sol = first_improvement(sol);
-    printf("cost: %i, used sets: %i\n", sol->fx, sol->used_sets);
+    printf("%i", sol->fx);
     finalize();
     return EXIT_SUCCESS;
 }
