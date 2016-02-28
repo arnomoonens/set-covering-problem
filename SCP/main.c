@@ -321,10 +321,8 @@ void execute(struct Solution *sol, int exclude_set) {
         for (i = 0; i < nrow[chosen_set]; i++) { //Say that we cover each element that the chosen set covers
             element = row[chosen_set][i];
             sol->y[element] = 1;
-            //            printf("sol->ncol_cover[element] of %i: %i\n", element, sol->ncol_cover[element]);
             sol->col_cover[element][sol->ncol_cover[element]] = chosen_set;
             sol->ncol_cover[element]++;
-            //            printf("Past this\n");
         }
         sol->used_sets++;
         sol->x[chosen_set] = 1;
@@ -341,6 +339,9 @@ void remove_set(struct Solution *sol, int set) {
         for (int j = 0; j < sol->ncol_cover[i]; j++) {
             if(sol->col_cover[i][j] == set) {
                 sol->ncol_cover[i]--;
+                if (!sol->ncol_cover[i]) {
+                    sol->y[i] = 0;
+                }
                 break;
             }
         }
@@ -420,7 +421,9 @@ struct Solution *best_improvement(struct Solution *sol) {
                 best_solution = new_sol;
             }
         }
-        redundancy_elimination(best_solution);
+        if (improvement) {
+            redundancy_elimination(best_solution);
+        }
     }
     return best_solution;
 }
@@ -442,7 +445,6 @@ struct Solution *first_improvement(struct Solution *sol) {
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
             if(new_sol->fx < best_solution->fx) {
-                //                printf("Found new solution with fx %i instead of %i\n", new_sol.fx, best_solution.fx);
                 improvement = 1;
                 best_solution = new_sol;
                 redundancy_elimination(best_solution);
@@ -460,8 +462,6 @@ void finalize(){
     free((void *) nrow );
     free((void *) ncol );
     free((void *) cost );
-    //free((void **) col_cover);
-    //free((void *) ncol_cover);
 }
 
 int main(int argc, char *argv[]) {
