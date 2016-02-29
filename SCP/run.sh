@@ -9,7 +9,7 @@ seed=20
 #Exercise 1.1
 for a in "ch1" "ch2" "ch3" "ch4"; do
     for re in "" "--re"; do
-        start=$S
+        start=$SECONDS
         if [ -z $re ] # if empty string
         then
             configuration="$a"
@@ -19,14 +19,14 @@ for a in "ch1" "ch2" "ch3" "ch4"; do
         for instance in "$2"/*
         do
             y=${instance%.txt} # get part before .txt
-            cost=$(eval "$1 --seed $seed --instance $instance --output $output --$a $re")
+            cost=$(eval "$1 --seed $seed --instance $instance --$a $re")
             filename=${y##*/} # Only keep filename (remove the path)
             length=${#filename}
             first=$(echo ${filename:3:$length-4}  | awk '{print toupper($0)}')
             second=${filename:$length-1:1}
             echo "$first.$second $cost" >> "$3/$configuration.txt"
         done
-        duration=$(( S - start ))
+        duration=$(( SECONDS - start ))
         echo "$configuration $duration" >> "$3/ex11_durations.txt"
     done
 done
@@ -36,7 +36,7 @@ done
 for a in "ch1" "ch4"; do
     for re in "" "--re"; do
         for imp_algo in "fi" "bi"; do
-            start=$S
+            start=$SECONDS
             if [ -z $re ] # if empty string
             then
                 configuration="$a+$imp_algo"
@@ -46,14 +46,14 @@ for a in "ch1" "ch4"; do
             for instance in "$2"/*
             do
                 y=${instance%.txt} # get part before .txt
-                cost=$(eval "$1 --seed $seed --instance $instance --output $output --$a $re --$imp_algo")
+                cost=$(eval "$1 --seed $seed --instance $instance --$a $re --$imp_algo")
                 filename=${y##*/} # Only keep filename (remove the path)
                 length=${#filename}
                 first=$(echo ${filename:3:$length-4}  | awk '{print toupper($0)}')
                 second=${filename:$length-1:1}
                 echo "$first.$second $cost" >> "$3/$configuration.txt"
             done
-            duration=$(( S - start ))
+            duration=$(( SECONDS - start ))
             echo "$configuration $duration" >> "$3/ex12_durations.txt"
         done
     done
