@@ -41,7 +41,6 @@ void error_reading_file(char *text){
 /** Algorithm parameters **/
 int seed=1234567;
 char *scp_file="";
-char *output_file="output.txt";
 
 /** Variables to activate algorithms **/
 int ch1=0, ch2=0, ch3=0, ch4=0, bi=0, fi=0, re=0;
@@ -94,7 +93,6 @@ void usage(){
     printf("Parameters:\n");
     printf("  --seed : seed to initialize random number generator\n");
     printf("  --instance: SCP instance to execute.\n");
-    printf("  --output: Filename for output results.\n");
     printf("Options:\n");
     printf("  --ch1: random solution construction\n");
     printf("  --ch2: static cost-based greedy values.\n");
@@ -121,9 +119,6 @@ void read_parameters(int argc, char *argv[]) {
             i+=1;
         } else if (strcmp(argv[i], "--instance") == 0) {
             scp_file=argv[i+1];
-            i+=1;
-        } else if (strcmp(argv[i], "--output") == 0) {
-            output_file=argv[i+1];
             i+=1;
         } else if (strcmp(argv[i], "--ch1") == 0) {
             ch1=1;

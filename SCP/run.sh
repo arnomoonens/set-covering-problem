@@ -1,10 +1,10 @@
 #!/bin/sh
 
-seed=20
-output="out.txt"
-
 # $1 is path of scp executable
 # $2 is path of folder with instances
+# $3 is path of folder to save results
+
+seed=20
 
 #Exercise 1.1
 for a in "ch1" "ch2" "ch3" "ch4"; do
@@ -24,10 +24,10 @@ for a in "ch1" "ch2" "ch3" "ch4"; do
             length=${#filename}
             first=$(echo ${filename:3:$length-4}  | awk '{print toupper($0)}')
             second=${filename:$length-1:1}
-            echo "$first.$second $cost" >> "$configuration.txt"
+            echo "$first.$second $cost" >> "$3/$configuration.txt"
         done
         duration=$(( S - start ))
-        echo "$configuration $duration" >> "ex11_durations.txt"
+        echo "$configuration $duration" >> "$3/ex11_durations.txt"
     done
 done
 
@@ -51,10 +51,10 @@ for a in "ch1" "ch4"; do
                 length=${#filename}
                 first=$(echo ${filename:3:$length-4}  | awk '{print toupper($0)}')
                 second=${filename:$length-1:1}
-                echo "$first.$second $cost" >> "$configuration.txt"
+                echo "$first.$second $cost" >> "$3/$configuration.txt"
             done
             duration=$(( S - start ))
-            echo "$configuration $duration" >> "ex12_durations.txt"
+            echo "$configuration $duration" >> "$3/ex12_durations.txt"
         done
     done
 done
