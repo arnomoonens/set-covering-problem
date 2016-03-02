@@ -81,12 +81,15 @@ struct Solution *copy_solution(struct Solution *source) {
     memcpy(new_sol->x, source->x, n * sizeof(int));
     memcpy(new_sol->y, source->y, m * sizeof(int));
     
-    for (int i=0; i<m; i++)
-        memcpy(&new_sol->col_cover[i], &source->col_cover[i], ncol[i] * sizeof(int));
+    for (int i=0; i<m; i++) {
+        memcpy(new_sol->col_cover[i], source->col_cover[i], source->ncol_cover[i] * sizeof(int));
+    }
     memcpy(new_sol->ncol_cover, source->ncol_cover, m * sizeof(int));
     
     return new_sol;
 }
+
+
 
 void usage(){
     printf("\nUSAGE: lsscp [param_name, param_value] [options]...\n");
@@ -256,7 +259,7 @@ struct Solution *initialize(){
 /** Check if some elements aren't covered by a set yet in the current solution **/
 int uncovered_elements(struct Solution *sol) {
     for (int i = 0; i < m; i++)
-        if(!sol->ncol_cover[i]) return 1;
+        if(!sol->y[i]) return 1;
     return 0;
 }
 
@@ -333,8 +336,11 @@ void remove_set(struct Solution *sol, int set) {
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < sol->ncol_cover[i]; j++) {
             if(sol->col_cover[i][j] == set) {
+                for (int k = j+1; k < sol->ncol_cover[i]; k++) { //Shift set indices to the left starting from j+1
+                    sol->col_cover[i][k-1] = sol->col_cover[i][k];
+                }
                 sol->ncol_cover[i]--;
-                if (!sol->ncol_cover[i]) {
+                if (!sol->ncol_cover[i]) { //No included sets cover element i anymore
                     sol->y[i] = 0;
                 }
                 break;
@@ -377,7 +383,14 @@ void redundancy_elimination(struct Solution *sol) {
                     break;
                 }
             }
-            if (covered_by_set && (sol->ncol_cover[i] <= 1)) {
+            //            if (covered_by_set) {
+            //                printf("Covering elements: ");
+            //                for (int j = 0; j < sol->ncol_cover[i]; j++) {
+            //                    printf("%i ", sol->col_cover[i][j]);
+            //                }
+            //                printf("\n");
+            //            }
+            if (covered_by_set && (sol->ncol_cover[i] == 1)) {
                 can_remove = 0;
                 break;
             }
@@ -397,11 +410,11 @@ void redundancy_elimination(struct Solution *sol) {
  - keep solution with lowest cost
  **/
 struct Solution *best_improvement(struct Solution *sol) {
-    int improvement = 1;
-    int max_weight_set;
-    int *tried = (int *) mymalloc(n*sizeof(int));
+    int improvement, max_weight_set;
+    int *tried;
     struct Solution *best_solution = copy_solution(sol);
     while (improvement) {
+        tried = (int *) mymalloc(n*sizeof(int));
         improvement = 0;
         int counter = sol->used_sets;
         while (counter) {
@@ -425,8 +438,7 @@ struct Solution *best_improvement(struct Solution *sol) {
 
 
 struct Solution *first_improvement(struct Solution *sol) {
-    int improvement = 1;
-    int max_weight_set;
+    int improvement, max_weight_set;
     int *tried = (int *) mymalloc(n*sizeof(int));
     struct Solution *best_solution = copy_solution(sol);
     while (improvement) {

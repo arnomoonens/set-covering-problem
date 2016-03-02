@@ -5,6 +5,7 @@ colnames(bestknown) <- c("Instance", "Cost")
 results.folder <- '/Users/arnomoonens/MA1-AI/Heuristic Optimization/exercises/impl_ex1/code_scp/SCP/SCP/results/'
 
 averagedeviation <- function(x1, x2) mean(abs(x1 - x2) / ((x1 + x2) / 2))
+solutionquality <- function(df, best) 100 * (df$Cost - best$Cost) / best$Cost
 
 cat("Exercise 1.1\n")
 for(algo in c("ch1", "ch2", "ch3", "ch4")) {
@@ -20,11 +21,15 @@ for(algo in c("ch1", "ch2", "ch3", "ch4")) {
         cat("Percentages of instances with better results using reduncancy elimination: ", mean(result.re$Cost < result.nore$Cost), "\n", sep="")
         improvements <- result.nore$Cost - result.re$Cost # differences are always >= 0
         cat("Average improvement: ", mean(improvements), "; minimum: ", min(improvements), "; maximum: ", max(improvements), "\n", sep="")
+        cat("Tests for difference in solution quality between ", algo, " and ", algo, "+RE:\n", sep="")
+        cat("P value when using t test: ", t.test(solutionquality(result.re, filtered), solutionquality(result.nore, filtered), paired=TRUE)$p.value, "\n", sep="")
+        cat("P value when using Wilcoxon test: ", wilcox.test(solutionquality(result.re, filtered), solutionquality(result.nore, filtered), paired=TRUE)$p.value, "\n", sep="")
 }
 computation.times <- read.table(paste0(results.folder, "ex11_durations.txt"), header = FALSE, sep = " ")
 colnames(computation.times) = c("Experiment", "Seconds")
 cat("Computation times:")
 print(computation.times, row.names = FALSE)
+cat("\n", sep="")
 
 cat("Exercise 1.2\n")
 for(algo in c("ch1", "ch4")) {
