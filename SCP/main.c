@@ -75,6 +75,14 @@ struct Solution *copy_solution(struct Solution *source) {
     return new_sol;
 }
 
+void free_solution(struct Solution *sol) {
+    free((void *) sol->x);
+    free((void *) sol->y);
+    free((void **) sol->col_cover);
+    free((void *) sol->ncol_cover);
+    free((void *) sol);
+    return;
+}
 
 
 void usage(){
@@ -336,7 +344,7 @@ void remove_set(struct Solution *sol, int set) {
     return;
 }
 
-int find_max_weight_set(struct Solution *sol, int * exclude_sets) {
+int find_max_weight_set(struct Solution *sol, int *exclude_sets) {
     int current_weight;
     int max_weight_set = 0;
     int max_weight = 0;
@@ -369,13 +377,6 @@ void redundancy_elimination(struct Solution *sol) {
                     break;
                 }
             }
-            //            if (covered_by_set) {
-            //                printf("Covering elements: ");
-            //                for (int j = 0; j < sol->ncol_cover[i]; j++) {
-            //                    printf("%i ", sol->col_cover[i][j]);
-            //                }
-            //                printf("\n");
-            //            }
             if (covered_by_set && (sol->ncol_cover[i] == 1)) {
                 can_remove = 0;
                 break;
@@ -385,6 +386,7 @@ void redundancy_elimination(struct Solution *sol) {
             remove_set(sol, max_weight_set);
         }
     }
+    free((void *) tried);
     return;
 }
 
@@ -396,8 +398,11 @@ void redundancy_elimination(struct Solution *sol) {
  - keep solution with lowest cost
  **/
 struct Solution *best_improvement(struct Solution *sol) {
-    int improvement, max_weight_set;
+    int max_weight_set;
+    int improvement = 1;
     int *tried;
+    ch1 = ch2 = ch3 = 0;
+    ch4 = 1;
     struct Solution *best_solution = copy_solution(sol);
     while (improvement) {
         tried = (int *) mymalloc(n*sizeof(int));
@@ -412,6 +417,7 @@ struct Solution *best_improvement(struct Solution *sol) {
             execute(new_sol, max_weight_set);
             if(new_sol->fx < best_solution->fx) {
                 improvement = 1;
+                free_solution(best_solution);
                 best_solution = new_sol;
             }
         }
@@ -419,14 +425,18 @@ struct Solution *best_improvement(struct Solution *sol) {
             redundancy_elimination(best_solution);
         }
     }
+    free((void *) tried);
     return best_solution;
 }
 
 
 struct Solution *first_improvement(struct Solution *sol) {
-    int improvement, max_weight_set;
+    int max_weight_set;
+    int improvement = 1;
     int *tried;
     struct Solution *best_solution = copy_solution(sol);
+    ch1 = ch2 = ch3 = 0;
+    ch4 = 1;
     while (improvement) {
         tried = (int *) mymalloc(n*sizeof(int));
         improvement = 0;
@@ -440,22 +450,25 @@ struct Solution *first_improvement(struct Solution *sol) {
             execute(new_sol, max_weight_set);
             if(new_sol->fx < best_solution->fx) {
                 improvement = 1;
+                free_solution(best_solution);
                 best_solution = new_sol;
                 redundancy_elimination(best_solution);
                 break;
             }
         }
     }
+    free((void *) tried);
     return best_solution;
 }
 
 /*** Use this function to finalize execution */
-void finalize(){
+void finalize(struct Solution *sol){
     free((void **) row );
     free((void **) col );
     free((void *) nrow );
     free((void *) ncol );
     free((void *) cost );
+    free_solution(sol);
 }
 
 int main(int argc, char *argv[]) {
@@ -469,6 +482,6 @@ int main(int argc, char *argv[]) {
     if (bi) sol = best_improvement(sol);
     else if (fi) sol = first_improvement(sol);
     printf("%i", sol->fx);
-    finalize();
+    finalize(sol);
     return EXIT_SUCCESS;
 }
