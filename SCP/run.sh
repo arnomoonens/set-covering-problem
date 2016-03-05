@@ -16,7 +16,9 @@ for a in "ch1" "ch2" "ch3" "ch4"; do
         else
             configuration="$a+re"
         fi
-        for instance in "$2"/*
+        echo "" > "$3/$configuration.txt" # Create/overwrite results file
+        echo "" > "$3/ex11_durations.txt" # Create/overwrite durations file
+        for instance in "$2"/* # Loop over every instance file in the instances folder
         do
             y=${instance%.txt} # get part before .txt
             cost=$(eval "$1 --seed $seed --instance $instance --$a $re")
@@ -43,6 +45,8 @@ for a in "ch1" "ch4"; do
             else
                 configuration="$a+re+$imp_algo"
             fi
+            echo "" > "$3/$configuration.txt" # Create/overwrite results file
+            echo "" > "$3/ex12_durations.txt" # Create/overwrite durations file
             for instance in "$2"/*
             do
                 y=${instance%.txt} # get part before .txt

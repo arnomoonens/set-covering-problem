@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include "utils.h"
+
 
 void *mymalloc( size_t size ) {
   void *s;
