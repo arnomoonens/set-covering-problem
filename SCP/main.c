@@ -398,14 +398,14 @@ void redundancy_elimination(struct Solution *sol) {
  - keep solution with lowest cost
  **/
 struct Solution *best_improvement(struct Solution *sol) {
-    int max_weight_set;
+    int max_weight_set, i;
     int improvement = 1;
-    int *tried;
+    int *tried = (int *) mymalloc(n*sizeof(int));
     ch1 = ch2 = ch3 = 0;
     ch4 = 1;
     struct Solution *best_solution = copy_solution(sol);
     while (improvement) {
-        tried = (int *) mymalloc(n*sizeof(int));
+        for (i = 0; i < n; i++) tried[i] = 0;
         improvement = 0;
         int counter = best_solution->used_sets;
         while (counter) {
@@ -431,14 +431,14 @@ struct Solution *best_improvement(struct Solution *sol) {
 
 
 struct Solution *first_improvement(struct Solution *sol) {
-    int max_weight_set;
+    int max_weight_set, i;
     int improvement = 1;
-    int *tried;
+    int *tried = (int *) mymalloc(n*sizeof(int));
     struct Solution *best_solution = copy_solution(sol);
     ch1 = ch2 = ch3 = 0;
     ch4 = 1;
     while (improvement) {
-        tried = (int *) mymalloc(n*sizeof(int));
+        for (i = 0; i < n; i++) tried[i] = 0;
         improvement = 0;
         int counter = best_solution->used_sets;
         while (counter) {
