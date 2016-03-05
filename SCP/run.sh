@@ -7,6 +7,7 @@
 seed=20
 
 #Exercise 1.1
+echo "" > "$3/ex11_durations.txt" # Create/overwrite durations file
 for a in "ch1" "ch2" "ch3" "ch4"; do
     for re in "" "--re"; do
         start=$SECONDS
@@ -17,7 +18,6 @@ for a in "ch1" "ch2" "ch3" "ch4"; do
             configuration="$a+re"
         fi
         echo "" > "$3/$configuration.txt" # Create/overwrite results file
-        echo "" > "$3/ex11_durations.txt" # Create/overwrite durations file
         for instance in "$2"/* # Loop over every instance file in the instances folder
         do
             y=${instance%.txt} # get part before .txt
@@ -35,6 +35,7 @@ done
 
 
 #Exercise 1.2
+echo "" > "$3/ex12_durations.txt" # Create/overwrite durations file
 for a in "ch1" "ch4"; do
     for re in "" "--re"; do
         for imp_algo in "fi" "bi"; do
@@ -46,7 +47,6 @@ for a in "ch1" "ch4"; do
                 configuration="$a+re+$imp_algo"
             fi
             echo "" > "$3/$configuration.txt" # Create/overwrite results file
-            echo "" > "$3/ex12_durations.txt" # Create/overwrite durations file
             for instance in "$2"/*
             do
                 y=${instance%.txt} # get part before .txt

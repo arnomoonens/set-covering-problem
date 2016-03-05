@@ -402,12 +402,12 @@ struct Solution *best_improvement(struct Solution *sol) {
     while (improvement) {
         tried = (int *) mymalloc(n*sizeof(int));
         improvement = 0;
-        int counter = sol->used_sets;
+        int counter = best_solution->used_sets;
         while (counter) {
             counter--;
-            max_weight_set = find_max_weight_set(sol, tried);
+            max_weight_set = find_max_weight_set(best_solution, tried);
             tried[max_weight_set] = 1;
-            struct Solution *new_sol = copy_solution(sol);
+            struct Solution *new_sol = copy_solution(best_solution);
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
             if(new_sol->fx < best_solution->fx) {
@@ -425,16 +425,17 @@ struct Solution *best_improvement(struct Solution *sol) {
 
 struct Solution *first_improvement(struct Solution *sol) {
     int improvement, max_weight_set;
-    int *tried = (int *) mymalloc(n*sizeof(int));
+    int *tried;
     struct Solution *best_solution = copy_solution(sol);
     while (improvement) {
+        tried = (int *) mymalloc(n*sizeof(int));
         improvement = 0;
-        int counter = sol->used_sets;
+        int counter = best_solution->used_sets;
         while (counter) {
             counter--;
-            max_weight_set = find_max_weight_set(sol, tried);
+            max_weight_set = find_max_weight_set(best_solution, tried);
             tried[max_weight_set] = 1;
-            struct Solution *new_sol = copy_solution(sol);
+            struct Solution *new_sol = copy_solution(best_solution);
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
             if(new_sol->fx < best_solution->fx) {
