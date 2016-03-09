@@ -33,3 +33,9 @@
 
 # added by GitSavvy
 SCP/results/
+
+# added by GitSavvy
+/SCP/.Rhistory
+
+# added by GitSavvy
+/SCP.xcodeproj/xcuserdata/

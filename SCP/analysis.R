@@ -4,7 +4,6 @@ colnames(bestknown) <- c("Instance", "Cost")
 
 results.folder <- '/Users/arnomoonens/MA1-AI/Heuristic Optimization/exercises/impl_ex1/code_scp/SCP/SCP/results/'
 
-averagedeviation <- function(x1, x2) mean(abs(x1 - x2) / ((x1 + x2) / 2))
 solutionquality <- function(df, best) 100 * (df$Cost - best$Cost) / best$Cost
 
 cat("Exercise 1.1\n")
@@ -16,8 +15,8 @@ for(algo in c("ch1", "ch2", "ch3", "ch4")) {
         colnames(result.re) <- c("Instance", "Cost")
         colnames(result.nore) <- c("Instance", "Cost")
         filtered <- bestknown[bestknown$Instance %in% result.re$Instance,] #Remove results from best known that don't appear in experiment results
-        cat("File: ", filename.re, "; Average deviation: ", averagedeviation(filtered$Cost, result.re$Cost), "\n", sep="")
-        cat("File: ", filename.nore, "; Average deviation: ", averagedeviation(filtered$Cost, result.nore$Cost), "\n", sep="")
+        cat("File: ", filename.re, "; Average deviation: ", mean(solutionquality(filtered, result.re)), "\n", sep="")
+        cat("File: ", filename.nore, "; Average deviation: ", mean(solutionquality(filtered, result.nore)), "\n", sep="")
         cat("Percentages of instances with better results using reduncancy elimination: ", mean(result.re$Cost < result.nore$Cost), "\n", sep="")
         improvements <- result.nore$Cost - result.re$Cost # differences are always >= 0
         cat("Average improvement: ", mean(improvements), "; minimum: ", min(improvements), "; maximum: ", max(improvements), "\n", sep="")
@@ -45,7 +44,7 @@ for(algo in c("ch1", "ch4")) {
             result <- read.table(paste0(results.folder, filename), header = FALSE, sep = " ")
             colnames(result) <- c("Instance", "Cost")
             filtered <- bestknown[bestknown$Instance %in% result$Instance,] #Remove results from best known that don't appear in experiment results
-            cat("File: ", filename, "; Average deviation: ", averagedeviation(filtered$Cost, result$Cost), "\n", sep="")
+            cat("File: ", filename, "; Average deviation: ", mean(solutionquality(filtered, result)), "\n", sep="")
             result.noimp <- read.table(paste0(results.folder, filename.noimp), header = FALSE, sep = " ")
             colnames(result.noimp) <- c("Instance", "Cost")
             cat("Percentages of instances with better results using improvement algorithm ", imp.algo, ": ", mean(result$Cost < result.noimp$Cost), "\n", sep="")
