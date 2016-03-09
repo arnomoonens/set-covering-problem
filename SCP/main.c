@@ -348,13 +348,12 @@ void remove_set(struct Solution *sol, int set) {
 
 
 int find_max_weight_set(struct Solution *sol, int ctr) {
-    int set = 0;
-    int i;
-    for (i = ctr; i < n; i++) {
-        set = sorted_by_weight[i];
+    int set;
+    for (; ctr < n; ctr++) {
+        set = sorted_by_weight[ctr];
         if (sol->x[set]) break;
     }
-    return i;
+    return ctr;
 }
 
 
@@ -409,7 +408,7 @@ struct Solution *best_improvement(struct Solution *sol) {
         int counter = best_solution->used_sets;
         while (counter) {
             counter--;
-            tried = find_max_weight_set(sol, tried);
+            tried = find_max_weight_set(best_solution, tried);
             max_weight_set = sorted_by_weight[tried];
             tried++;
             struct Solution *new_sol = copy_solution(best_solution);
@@ -442,7 +441,7 @@ struct Solution *first_improvement(struct Solution *sol) {
         int counter = best_solution->used_sets;
         while (counter) {
             counter--;
-            tried = find_max_weight_set(sol, tried);
+            tried = find_max_weight_set(best_solution, tried);
             max_weight_set = sorted_by_weight[tried];
             tried++;
             struct Solution *new_sol = copy_solution(best_solution);
@@ -484,7 +483,7 @@ int main(int argc, char *argv[]) {
     struct Solution *sol = initialize();
     execute(sol, -1); // index of set to exclude is set to -1: don't exlude a set from possible being used
     if (re || bi || fi) {
-        // Sort
+        // Sort sets using cost from high to low
         sorted_by_weight = (int *) mymalloc(n*sizeof(int));
         for (int i = 0; i < n; i++) sorted_by_weight[i] = i;
         qsort(sorted_by_weight, n, sizeof(int), compare_cost);
