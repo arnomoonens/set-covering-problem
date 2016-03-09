@@ -40,6 +40,8 @@ int *ncol;        /* ncol[i] number of columns that cover row i */
 int *nrow;        /* nrow[i] number of rows that are covered by column i */
 int *cost;        /* cost[i] cost of column i  */
 
+int *sorted_by_weight;
+
 /** Holds all solution information **/
 struct Solution {
     int *x;           /* x[i] 0,1 if column i is selected */
@@ -344,30 +346,28 @@ void remove_set(struct Solution *sol, int set) {
     return;
 }
 
-int find_max_weight_set(struct Solution *sol, int *exclude_sets) {
-    int current_weight;
-    int max_weight_set = 0;
-    int max_weight = 0;
-    for (int i = 0; i < n; i++) {
-        current_weight = cost[i];
-        if (sol->x[i] && cost[i] > max_weight && !exclude_sets[i]) {
-            max_weight_set = i;
-            max_weight = current_weight;
-        }
+
+int find_max_weight_set(struct Solution *sol, int ctr) {
+    int set = 0;
+    int i;
+    for (i = ctr; i < n; i++) {
+        set = sorted_by_weight[i];
+        if (sol->x[set]) break;
     }
-    return max_weight_set;
+    return i;
 }
+
 
 /*** Remove redundant sets from the solution***/
 void redundancy_elimination(struct Solution *sol) {
     int i, max_weight_set, can_remove, covered_by_set;
-    int *tried = (int *) mymalloc(n*sizeof(int));
-    for (i = 0; i < n; i++) tried[i] = 0;
+    int tried = 0;
     int counter = sol->used_sets;
     while (counter) {
         counter--;
-        max_weight_set = find_max_weight_set(sol, tried);
-        tried[max_weight_set] = 1;
+        tried = find_max_weight_set(sol, tried);
+        max_weight_set = sorted_by_weight[tried];
+        tried++;
         can_remove = 1;
         for (i = 0; i < m; i++) {
             covered_by_set = 0;
@@ -386,7 +386,6 @@ void redundancy_elimination(struct Solution *sol) {
             remove_set(sol, max_weight_set);
         }
     }
-    free((void *) tried);
     return;
 }
 
@@ -398,20 +397,21 @@ void redundancy_elimination(struct Solution *sol) {
  - keep solution with lowest cost
  **/
 struct Solution *best_improvement(struct Solution *sol) {
-    int max_weight_set, i;
+    int max_weight_set;
     int improvement = 1;
-    int *tried = (int *) mymalloc(n*sizeof(int));
+    int tried = 0;
     ch1 = ch2 = ch3 = 0;
     ch4 = 1;
     struct Solution *best_solution = copy_solution(sol);
     while (improvement) {
-        for (i = 0; i < n; i++) tried[i] = 0;
+        tried = 0;
         improvement = 0;
         int counter = best_solution->used_sets;
         while (counter) {
             counter--;
-            max_weight_set = find_max_weight_set(best_solution, tried);
-            tried[max_weight_set] = 1;
+            tried = find_max_weight_set(sol, tried);
+            max_weight_set = sorted_by_weight[tried];
+            tried++;
             struct Solution *new_sol = copy_solution(best_solution);
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
@@ -425,26 +425,26 @@ struct Solution *best_improvement(struct Solution *sol) {
             redundancy_elimination(best_solution);
         }
     }
-    free((void *) tried);
     return best_solution;
 }
 
 
 struct Solution *first_improvement(struct Solution *sol) {
-    int max_weight_set, i;
+    int max_weight_set;
     int improvement = 1;
-    int *tried = (int *) mymalloc(n*sizeof(int));
+    int tried = 0;
     struct Solution *best_solution = copy_solution(sol);
     ch1 = ch2 = ch3 = 0;
     ch4 = 1;
     while (improvement) {
-        for (i = 0; i < n; i++) tried[i] = 0;
+        tried = 0;
         improvement = 0;
         int counter = best_solution->used_sets;
         while (counter) {
             counter--;
-            max_weight_set = find_max_weight_set(best_solution, tried);
-            tried[max_weight_set] = 1;
+            tried = find_max_weight_set(sol, tried);
+            max_weight_set = sorted_by_weight[tried];
+            tried++;
             struct Solution *new_sol = copy_solution(best_solution);
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
@@ -457,7 +457,6 @@ struct Solution *first_improvement(struct Solution *sol) {
             }
         }
     }
-    free((void *) tried);
     return best_solution;
 }
 
@@ -471,6 +470,12 @@ void finalize(struct Solution *sol){
     free_solution(sol);
 }
 
+int compare_cost(const void * a, const void * b)
+{
+    return ( cost[*(int*)b] - cost[*(int*)a] );
+}
+
+
 int main(int argc, char *argv[]) {
     read_parameters(argc, argv);
     srand(seed); /*set seed */
@@ -478,9 +483,15 @@ int main(int argc, char *argv[]) {
     //print_instance(0);
     struct Solution *sol = initialize();
     execute(sol, -1); // index of set to exclude is set to -1: don't exlude a set from possible being used
-    if (re) redundancy_elimination(sol);
-    if (bi) sol = best_improvement(sol);
-    else if (fi) sol = first_improvement(sol);
+    if (re || bi || fi) {
+        // Sort
+        sorted_by_weight = (int *) mymalloc(n*sizeof(int));
+        for (int i = 0; i < n; i++) sorted_by_weight[i] = i;
+        qsort(sorted_by_weight, n, sizeof(int), compare_cost);
+        if (re) redundancy_elimination(sol);
+        if (bi) sol = best_improvement(sol);
+        else if (fi) sol = first_improvement(sol);
+    }
     printf("%i", sol->fx);
     finalize(sol);
     return EXIT_SUCCESS;
