@@ -432,9 +432,9 @@ struct Solution *first_improvement(struct Solution *sol) {
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
-    struct Solution *best_solution = copy_solution(sol);
     ch1 = ch2 = ch3 = 0;
     ch4 = 1;
+    struct Solution *best_solution = copy_solution(sol);
     while (improvement) {
         tried = 0;
         improvement = 0;
@@ -490,6 +490,7 @@ int main(int argc, char *argv[]) {
         if (re) redundancy_elimination(sol);
         if (bi) sol = best_improvement(sol);
         else if (fi) sol = first_improvement(sol);
+        free((void *) sorted_by_weight);
     }
     printf("%i", sol->fx);
     finalize(sol);
