@@ -406,6 +406,7 @@ struct Solution *best_improvement(struct Solution *sol) {
         tried = 0;
         improvement = 0;
         int counter = best_solution->used_sets;
+        struct Solution *current_best = copy_solution(best_solution);
         while (counter) {
             counter--;
             tried = find_max_weight_set(best_solution, tried);
@@ -414,13 +415,15 @@ struct Solution *best_improvement(struct Solution *sol) {
             struct Solution *new_sol = copy_solution(best_solution);
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
-            if(new_sol->fx < best_solution->fx) {
+            if(new_sol->fx < current_best->fx) {
                 improvement = 1;
-                free_solution(best_solution);
-                best_solution = new_sol;
+                free_solution(current_best);
+                current_best = new_sol;
             }
         }
         if (improvement) {
+            free_solution(best_solution);
+            best_solution = current_best;
             redundancy_elimination(best_solution);
         }
     }
