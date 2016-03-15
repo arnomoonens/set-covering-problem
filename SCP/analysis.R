@@ -1,8 +1,12 @@
-bestknown <- read.csv('~/MA1-AI/Heuristic Optimization/exercises/impl_ex1/best-known.txt', header = FALSE, sep=" ")
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+if (length(args)<2) {
+  stop("2 arguments needed. Usage: Rscript analysis.R PATH/TO/best-known.txt PATH/TO/RESULTS/DIRECTORY", call.=FALSE)
+}
+bestknown <- read.csv(args[1], header = FALSE, sep=" ")
 colnames(bestknown) <- c("Instance", "Cost")
 
-
-results.folder <- '/Users/arnomoonens/MA1-AI/Heuristic Optimization/exercises/impl_ex1/code_scp/SCP/SCP/results/'
+results.folder <- args[2]
 
 solutionquality <- function(df, best) 100 * (df$Cost - best$Cost) / best$Cost
 

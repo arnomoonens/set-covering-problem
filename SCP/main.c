@@ -48,7 +48,7 @@ struct Solution {
     int *y;           /* y[i] 0,1 if row i covered by the actual solution */
     /** Note: Use incremental updates for the solution **/
     int fx;           /* sum of the cost of the columns selected in the solution (can be partial) */
-    
+
     /** Dynamic variables **/
     /** Note: use dynamic variables to make easier the construction and modification of solutions.  **/
     /**       these are just examples of useful variables.                                          **/
@@ -65,15 +65,15 @@ struct Solution *copy_solution(struct Solution *source) {
     struct Solution *new_sol = initialize();
     new_sol->used_sets = source->used_sets;
     new_sol->fx = source->fx;
-    
+
     memcpy(new_sol->x, source->x, n * sizeof(int));
     memcpy(new_sol->y, source->y, m * sizeof(int));
-    
+
     for (int i=0; i<m; i++) {
         memcpy(new_sol->col_cover[i], source->col_cover[i], source->ncol_cover[i] * sizeof(int));
     }
     memcpy(new_sol->ncol_cover, source->ncol_cover, m * sizeof(int));
-    
+
     return new_sol;
 }
 
@@ -139,13 +139,13 @@ void read_parameters(int argc, char *argv[]) {
             exit( EXIT_FAILURE );
         }
     }
-    
+
     if( (scp_file == NULL) || ((scp_file != NULL) && (scp_file[0] == '\0'))){
         printf("Error: --instance must be provided.\n");
         usage();
         exit( EXIT_FAILURE );
     }
-    
+
 }
 
 /*** Read instance in the OR-LIBRARY format ***/
@@ -153,18 +153,18 @@ void read_scp(char *filename) {
     int h,i,j;
     int *k;
     FILE *fp = fopen(filename, "r" );
-    
+
     if (fscanf(fp,"%d",&m)!=1)   /* number of rows = elements */
         error_reading_file("ERROR: there was an error reading instance file.");
     if (fscanf(fp,"%d",&n)!=1)   /* number of columns  = sets*/
         error_reading_file("ERROR: there was an error reading instance file.");
-    
+
     /* Cost of the n columns */
     cost = (int *) mymalloc(n*sizeof(int));
     for (j=0; j<n; j++)
         if (fscanf(fp,"%d",&cost[j]) !=1)
             error_reading_file("ERROR: there was an error reading instance file.");
-    
+
     /* Info of columns that cover each row */
     col  = (int **) mymalloc(m*sizeof(int *)); //indexes of columns that cover each row
     ncol = (int *) mymalloc(m*sizeof(int)); //nr of columns that cover each row
@@ -178,7 +178,7 @@ void read_scp(char *filename) {
             col[i][h]--; //I suppose in the instance file they start indexing at 1...
         }
     }
-    
+
     /* Info of rows that are covered by each column */
     row  = (int **) mymalloc(n*sizeof(int *)); //Indexes of rows that are covered by each column
     nrow = (int *) mymalloc(n*sizeof(int)); //Nr of rows that are covered by each column
@@ -204,11 +204,11 @@ void read_scp(char *filename) {
 /*** Use level>=1 to print more info (check the correct reading) */
 void print_instance(int level){
     int i;
-    
+
     printf("**********************************************\n");
     printf("  SCP INSTANCE: %s\n", scp_file);
     printf("  PROBLEM SIZE\t m = %d\t n = %d\n", m, n);
-    
+
     if(level >=1){
         printf("  COLUMN COST:\n");
         for(i=0; i<n;i++)
@@ -223,9 +223,9 @@ void print_instance(int level){
             printf("%d ", col[0][i]);
         printf("\n");
     }
-    
+
     printf("**********************************************\n\n");
-    
+
 }
 
 /*** Use this function to initialize other variables of the algorithms **/
@@ -236,7 +236,7 @@ struct Solution *initialize(){
     for (i = 0; i < n; i++) {sol->x[i] = 0;}
     sol->y = (int *) mymalloc(m*sizeof(int));
     for (i = 0; i < m; i++) {sol->y[i] = 0;}
-    
+
     sol->col_cover = (int **) mymalloc(m*sizeof(int *));
     for (i=0; i<m; i++) {
         sol->col_cover[i] = (int *) mymalloc(ncol[i]*sizeof(int));
@@ -244,7 +244,7 @@ struct Solution *initialize(){
             sol->col_cover[i][j] = -1;
         }
     }
-    
+
     sol->ncol_cover = (int *) mymalloc(m*sizeof(int));
     for (i = 0; i<m; i++) {sol->ncol_cover[i] = 0;}
     sol->fx = 0;
@@ -288,7 +288,7 @@ int choose_set(struct Solution *sol, int exclude_set) {
             if(ch2) current_cost = cost[i];
             else if(ch3) current_cost = (float) cost[i] / (float) nrow[i];
             else current_cost = (float) cost[i] / (float) extra_covered;
-            
+
             if (current_cost < best_cost && !sol->x[i] && best_cost >= 0) { //Cost of set we're handling is better than the best one we currently have
                 best_set = i;
                 best_cost = current_cost;
@@ -349,9 +349,9 @@ void remove_set(struct Solution *sol, int set) {
 
 int find_max_weight_set(struct Solution *sol, int ctr) {
     int set;
-    for (; ctr < n; ctr++) {
+    for (; ctr < n; ctr++) { // Start checking from the ctr'th set
         set = sorted_by_weight[ctr];
-        if (sol->x[set]) break;
+        if (sol->x[set]) break; // Stop when the set is used in the solution
     }
     return ctr;
 }
