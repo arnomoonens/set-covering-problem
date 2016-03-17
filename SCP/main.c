@@ -1,6 +1,6 @@
 /**      Heuristic Optimization     **/
 /**              2016               **/
-/**       Template exercise 1       **/
+/**           Exercise 1            **/
 /**       Set Covering Problem      **/
 /**                                 **/
 /*************************************/
@@ -275,7 +275,11 @@ int choose_set(struct Solution *sol, int exclude_set) {
             chosen_element = rand() % m;
             if(!sol->y[chosen_element]) found_element = 1;
         }
-        return col[chosen_element][rand() % ncol[chosen_element]];
+        int chosen_set = exclude_set;
+        while (chosen_set == exclude_set) {
+            chosen_set = col[chosen_element][rand() % ncol[chosen_element]];
+        }
+        return chosen_set;
     } else if (ch2 || ch3 || ch4) {
         int best_set = 0;
         float best_cost = -1;
