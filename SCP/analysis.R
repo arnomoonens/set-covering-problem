@@ -21,7 +21,7 @@ for(algo in c("ch1", "ch2", "ch3", "ch4")) {
         filtered <- bestknown[bestknown$Instance %in% result.re$Instance,] #Remove results from best known that don't appear in experiment results
         cat("File: ", filename.re, "; Average deviation: ", mean(solutionquality(filtered, result.re)), "\n", sep="")
         cat("File: ", filename.nore, "; Average deviation: ", mean(solutionquality(filtered, result.nore)), "\n", sep="")
-        cat("Percentages of instances with better results using reduncancy elimination: ", mean(result.re$Cost < result.nore$Cost), "\n", sep="")
+        cat("Percentages of instances with better results using reduncancy elimination: ", mean(result.re$Cost < result.nore$Cost)*100, "%\n", sep="")
         improvements <- result.nore$Cost - result.re$Cost # differences are always >= 0
         cat("Average improvement: ", mean(improvements), "; minimum: ", min(improvements), "; maximum: ", max(improvements), "\n", sep="")
         cat("Tests for difference in solution quality between ", algo, " and ", algo, "+RE:\n", sep="")
@@ -30,7 +30,7 @@ for(algo in c("ch1", "ch2", "ch3", "ch4")) {
 }
 computation.times <- read.table(paste0(results.folder, "ex11_durations.txt"), header = FALSE, sep = " ")
 colnames(computation.times) = c("Experiment", "Seconds")
-cat("Computation times:")
+cat("Computation times:\n")
 print(computation.times, row.names = FALSE)
 cat("\n", sep="")
 
@@ -51,12 +51,12 @@ for(algo in c("ch1", "ch4")) {
             cat("File: ", filename, "; Average deviation: ", mean(solutionquality(filtered, result)), "\n", sep="")
             result.noimp <- read.table(paste0(results.folder, filename.noimp), header = FALSE, sep = " ")
             colnames(result.noimp) <- c("Instance", "Cost")
-            cat("Percentages of instances with better results using improvement algorithm ", imp.algo, ": ", mean(result$Cost < result.noimp$Cost), "\n", sep="")
+            cat("Percentages of instances with better results using improvement algorithm ", imp.algo, ": ", mean(result$Cost < result.noimp$Cost)*100, "%\n", sep="")
         }
     }
 }
 
 computation.times <- read.table(paste0(results.folder, "ex12_durations.txt"), header = FALSE, sep = " ")
 colnames(computation.times) = c("Experiment", "Seconds")
-cat("Computation times:")
+cat("Computation times:\n")
 print(computation.times, row.names = FALSE)
