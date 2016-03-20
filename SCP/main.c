@@ -399,24 +399,24 @@ void redundancy_elimination(struct Solution *sol) {
  - Calculate and save cost
  - keep solution with lowest cost
  **/
-struct Solution *best_improvement(struct Solution *sol) {
+void best_improvement(struct Solution **sol) {
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
     ch1 = ch2 = ch3 = 0;
     ch4 = 1;
-    struct Solution *best_solution = copy_solution(sol);
+    struct Solution ** best_solution = sol;
     while (improvement) {
         tried = 0;
         improvement = 0;
-        int counter = best_solution->used_sets;
-        struct Solution *current_best = copy_solution(best_solution);
+        int counter = (*best_solution)->used_sets;
+        struct Solution *current_best = copy_solution(*best_solution);
         while (counter) {
             counter--;
-            tried = find_max_weight_set(best_solution, tried);
+            tried = find_max_weight_set(*best_solution, tried);
             max_weight_set = sorted_by_weight[tried];
             tried++;
-            struct Solution *new_sol = copy_solution(best_solution);
+            struct Solution *new_sol = copy_solution(*best_solution);
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
             if(new_sol->fx < current_best->fx) {
@@ -426,44 +426,44 @@ struct Solution *best_improvement(struct Solution *sol) {
             }
         }
         if (improvement) {
-            free_solution(best_solution);
-            best_solution = current_best;
-            redundancy_elimination(best_solution);
+            free_solution(*best_solution);
+            *best_solution = current_best;
+            redundancy_elimination(*best_solution);
         }
     }
-    return best_solution;
+    return;
 }
 
 
-struct Solution *first_improvement(struct Solution *sol) {
+void first_improvement(struct Solution **sol) {
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
     ch1 = ch2 = ch3 = 0;
     ch4 = 1;
-    struct Solution *best_solution = copy_solution(sol);
+    struct Solution ** best_solution = sol;
     while (improvement) {
         tried = 0;
         improvement = 0;
-        int counter = best_solution->used_sets;
+        int counter = (*best_solution)->used_sets;
         while (counter) {
             counter--;
-            tried = find_max_weight_set(best_solution, tried);
+            tried = find_max_weight_set(*best_solution, tried);
             max_weight_set = sorted_by_weight[tried];
             tried++;
-            struct Solution *new_sol = copy_solution(best_solution);
+            struct Solution *new_sol = copy_solution(*best_solution);
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
-            if(new_sol->fx < best_solution->fx) {
+            if(new_sol->fx < (*best_solution)->fx) {
                 improvement = 1;
-                free_solution(best_solution);
-                best_solution = new_sol;
-                redundancy_elimination(best_solution);
+                free_solution(*best_solution);
+                *best_solution = new_sol;
+                redundancy_elimination(*best_solution);
                 break;
             }
         }
     }
-    return best_solution;
+    return;
 }
 
 /*** Use this function to finalize execution */
@@ -478,7 +478,7 @@ void finalize(struct Solution *sol){
 
 int compare_cost(const void * a, const void * b)
 {
-    return ( cost[*(int*)b] - cost[*(int*)a] );
+    return ( cost[*(int*)b] - cost[*(int*)a] ); //cost of b - cost of a: sort from high to low cost
 }
 
 
@@ -488,15 +488,15 @@ int main(int argc, char *argv[]) {
     read_scp(scp_file);
     //print_instance(0);
     struct Solution *sol = initialize();
-    execute(sol, -1); // index of set to exclude is set to -1: don't exlude a set from possible being used
+    execute(sol, -1); // index of set to exclude is set to -1: don't exclude a set from possible being used
     if (re || bi || fi) {
         // Sort sets using cost from high to low
         sorted_by_weight = (int *) mymalloc(n*sizeof(int));
         for (int i = 0; i < n; i++) sorted_by_weight[i] = i;
         qsort(sorted_by_weight, n, sizeof(int), compare_cost);
         if (re) redundancy_elimination(sol);
-        if (bi) sol = best_improvement(sol);
-        else if (fi) sol = first_improvement(sol);
+        if (bi) best_improvement(&sol);
+        else if (fi) first_improvement(&sol);
         free((void *) sorted_by_weight);
     }
     printf("%i", sol->fx);

@@ -29,6 +29,7 @@ for a in "ch1" "ch2" "ch3" "ch4"; do
             echo "$first.$second $cost" >> "$3/$configuration.txt"
         done
         duration=$(( SECONDS - start ))
+        echo "$configuration\t$duration"
         echo "$configuration $duration" >> "$3/ex11_durations.txt"
     done
 done
@@ -58,6 +59,7 @@ for a in "ch1" "ch4"; do
                 echo "$first.$second $cost" >> "$3/$configuration.txt"
             done
             duration=$(( SECONDS - start ))
+            echo "$configuration\t$duration"
             echo "$configuration $duration" >> "$3/ex12_durations.txt"
         done
     done
