@@ -62,6 +62,7 @@ struct Solution {
 extern struct Solution *initialize();
 
 struct Solution *copy_solution(struct Solution *source) {
+    int i;
     struct Solution *new_sol = initialize();
     new_sol->used_sets = source->used_sets;
     new_sol->fx = source->fx;
@@ -69,7 +70,7 @@ struct Solution *copy_solution(struct Solution *source) {
     memcpy(new_sol->x, source->x, n * sizeof(int));
     memcpy(new_sol->y, source->y, m * sizeof(int));
 
-    for (int i=0; i<m; i++) {
+    for (i=0; i<m; i++) {
         memcpy(new_sol->col_cover[i], source->col_cover[i], source->ncol_cover[i] * sizeof(int));
     }
     memcpy(new_sol->ncol_cover, source->ncol_cover, m * sizeof(int));
@@ -77,6 +78,7 @@ struct Solution *copy_solution(struct Solution *source) {
     return new_sol;
 }
 
+/** Free all memory of a solution **/
 void free_solution(struct Solution *sol) {
     free((void *) sol->x);
     free((void *) sol->y);
@@ -99,6 +101,7 @@ void usage(){
     printf("  --ch4: Adaptive cover cost-based greedy values.\n");
     printf("  --re: applies redundancy elimination after construction.\n");
     printf("  --bi: best improvement.\n");
+    printf("  --fi: first improvement.\n");
     printf("\n");
 }
 
@@ -142,6 +145,18 @@ void read_parameters(int argc, char *argv[]) {
 
     if( (scp_file == NULL) || ((scp_file != NULL) && (scp_file[0] == '\0'))){
         printf("Error: --instance must be provided.\n");
+        usage();
+        exit( EXIT_FAILURE );
+    }
+    
+    if (ch1 + ch2 + ch3 + ch4 != 1) {
+        printf("Error: exactly one of --ch1, --ch2, --ch3 and --ch4 needs to be provided.\n");
+        usage();
+        exit( EXIT_FAILURE );
+    }
+    
+    if (bi & fi) { //bitwise and
+        printf("Error: maximally one of --bi and --fi may be provided.\n");
         usage();
         exit( EXIT_FAILURE );
     }
@@ -231,7 +246,7 @@ void print_instance(int level){
 /*** Use this function to initialize other variables of the algorithms **/
 struct Solution *initialize(){
     struct Solution *sol = mymalloc(sizeof(struct Solution));
-    int i;
+    int i, j;
     sol->x = (int *) mymalloc(n*sizeof(int));
     for (i = 0; i < n; i++) {sol->x[i] = 0;}
     sol->y = (int *) mymalloc(m*sizeof(int));
@@ -240,7 +255,7 @@ struct Solution *initialize(){
     sol->col_cover = (int **) mymalloc(m*sizeof(int *));
     for (i=0; i<m; i++) {
         sol->col_cover[i] = (int *) mymalloc(ncol[i]*sizeof(int));
-        for (int j = 0; j < ncol[i]; j++) {
+        for (j = 0; j < ncol[i]; j++) {
             sol->col_cover[i][j] = -1;
         }
     }
@@ -254,20 +269,23 @@ struct Solution *initialize(){
 
 /** Check if some elements aren't covered by a set yet in the current solution **/
 int uncovered_elements(struct Solution *sol) {
-    for (int i = 0; i < m; i++)
+    int i;
+    for (i = 0; i < m; i++)
         if(!sol->y[i]) return 1;
     return 0;
 }
 
 int added_elements(struct Solution *sol, int set) {
     int count = 0;
-    for (int i = 0; i < nrow[set]; i++)
+    int i;
+    for (i = 0; i < nrow[set]; i++)
         if (!sol->y[row[set][i]]) count++;
     return count;
 }
 
 /** Choose a set according to the chosen algorithm(s) **/
 int choose_set(struct Solution *sol, int exclude_set) {
+    int i;
     if (ch1) {
         int found_element = 0;
         int chosen_element = 0;
@@ -285,7 +303,7 @@ int choose_set(struct Solution *sol, int exclude_set) {
         float best_cost = -1;
         float current_cost;
         int extra_covered;
-        for (int i = 0; i < n; i++) {
+        for (i = 0; i < n; i++) {
             extra_covered = added_elements(sol, i);
             if(extra_covered == 0 || i == exclude_set) continue; //Skip the set if it doesn't cover elements that weren't covered yet
             //Calculate cost according to chosen algorithm
@@ -315,7 +333,7 @@ int choose_set(struct Solution *sol, int exclude_set) {
 void execute(struct Solution *sol, int exclude_set) {
     int chosen_set, element, i;
     while (uncovered_elements(sol)) {
-        chosen_set = choose_set(sol, exclude_set);
+        chosen_set = choose_set(sol, exclude_set); //Choose set according to the construction heuristic
         for (i = 0; i < nrow[chosen_set]; i++) { //Say that we cover each element that the chosen set covers
             element = row[chosen_set][i];
             sol->y[element] = 1;
@@ -330,13 +348,14 @@ void execute(struct Solution *sol, int exclude_set) {
 }
 
 void remove_set(struct Solution *sol, int set) {
+    int i, j, k;
     sol->used_sets--;
     sol->x[set] = 0;
     sol->fx -= cost[set];
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < sol->ncol_cover[i]; j++) {
-            if(sol->col_cover[i][j] == set) {
-                for (int k = j+1; k < sol->ncol_cover[i]; k++) { //Shift set indices to the left starting from j+1
+    for (i = 0; i < m; i++) { //Check for each element...
+        for (j = 0; j < sol->ncol_cover[i]; j++) {
+            if(sol->col_cover[i][j] == set) { //If the set to be removed covers the element...
+                for (k = j+1; k < sol->ncol_cover[i]; k++) { //then shift set indices to the left starting from j+1
                     sol->col_cover[i][k-1] = sol->col_cover[i][k];
                 }
                 sol->ncol_cover[i]--;
@@ -363,7 +382,7 @@ int find_max_weight_set(struct Solution *sol, int ctr) {
 
 /*** Remove redundant sets from the solution***/
 void redundancy_elimination(struct Solution *sol) {
-    int i, max_weight_set, can_remove, covered_by_set;
+    int i, j, max_weight_set, can_remove, covered_by_set;
     int tried = 0;
     int counter = sol->used_sets;
     while (counter) {
@@ -374,7 +393,7 @@ void redundancy_elimination(struct Solution *sol) {
         can_remove = 1;
         for (i = 0; i < m; i++) {
             covered_by_set = 0;
-            for (int j = 0; j < sol->ncol_cover[i]; j++) {
+            for (j = 0; j < sol->ncol_cover[i]; j++) {
                 if(sol->col_cover[i][j] == max_weight_set) {
                     covered_by_set = 1;
                     break;
@@ -413,21 +432,21 @@ void best_improvement(struct Solution **sol) {
         struct Solution *current_best = copy_solution(*best_solution);
         while (counter) {
             counter--;
-            tried = find_max_weight_set(*best_solution, tried);
+            tried = find_max_weight_set(*best_solution, tried); //get set with highest cost starting from tried'th set
             max_weight_set = sorted_by_weight[tried];
             tried++;
             struct Solution *new_sol = copy_solution(*best_solution);
-            remove_set(new_sol, max_weight_set);
-            execute(new_sol, max_weight_set);
-            if(new_sol->fx < current_best->fx) {
+            remove_set(new_sol, max_weight_set); //Remove set from the new solution...
+            execute(new_sol, max_weight_set); //And build up the solution again without using the removed set
+            if(new_sol->fx < current_best->fx) { //if move is new best improvement
                 improvement = 1;
                 free_solution(current_best);
-                current_best = new_sol;
+                current_best = new_sol; //memorize move
             }
         }
         if (improvement) {
             free_solution(*best_solution);
-            *best_solution = current_best;
+            *best_solution = current_best; //apply best move
             redundancy_elimination(*best_solution);
         }
     }
@@ -448,16 +467,16 @@ void first_improvement(struct Solution **sol) {
         int counter = (*best_solution)->used_sets;
         while (counter) {
             counter--;
-            tried = find_max_weight_set(*best_solution, tried);
+            tried = find_max_weight_set(*best_solution, tried); //get set with highest cost starting from tried'th set
             max_weight_set = sorted_by_weight[tried];
             tried++;
             struct Solution *new_sol = copy_solution(*best_solution);
             remove_set(new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
-            if(new_sol->fx < (*best_solution)->fx) {
+            if(new_sol->fx < (*best_solution)->fx) { //move improves
                 improvement = 1;
                 free_solution(*best_solution);
-                *best_solution = new_sol;
+                *best_solution = new_sol; //apply move
                 redundancy_elimination(*best_solution);
                 break;
             }
@@ -476,6 +495,7 @@ void finalize(struct Solution *sol){
     free_solution(sol);
 }
 
+/** Compare the cost of 2 solutions **/
 int compare_cost(const void * a, const void * b)
 {
     return ( cost[*(int*)b] - cost[*(int*)a] ); //cost of b - cost of a: sort from high to low cost
@@ -483,6 +503,7 @@ int compare_cost(const void * a, const void * b)
 
 
 int main(int argc, char *argv[]) {
+    int i;
     read_parameters(argc, argv);
     srand(seed); /*set seed */
     read_scp(scp_file);
@@ -492,7 +513,7 @@ int main(int argc, char *argv[]) {
     if (re || bi || fi) {
         // Sort sets using cost from high to low
         sorted_by_weight = (int *) mymalloc(n*sizeof(int));
-        for (int i = 0; i < n; i++) sorted_by_weight[i] = i;
+        for (i = 0; i < n; i++) sorted_by_weight[i] = i;
         qsort(sorted_by_weight, n, sizeof(int), compare_cost);
         if (re) redundancy_elimination(sol);
         if (bi) best_improvement(&sol);
