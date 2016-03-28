@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		CB4717081C8ADDC80065EA61 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = CB4717071C8ADDC80065EA61 /* utils.c */; };
 		CB7AD4951C7A171600BA4676 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = CB7AD4941C7A171600BA4676 /* main.c */; };
+		CBF08D7A1CA98F0F00470A6E /* solution.c in Sources */ = {isa = PBXBuildFile; fileRef = CBF08D781CA98F0F00470A6E /* solution.c */; };
+		CBF08D7D1CA9941700470A6E /* instance.c in Sources */ = {isa = PBXBuildFile; fileRef = CBF08D7B1CA9941700470A6E /* instance.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,6 +32,10 @@
 		CB7AD4911C7A171600BA4676 /* SCP */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SCP; sourceTree = BUILT_PRODUCTS_DIR; };
 		CB7AD4941C7A171600BA4676 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		CB7AD49D1C7A174000BA4676 /* scp42.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = scp42.txt; path = ../../scp42.txt; sourceTree = "<group>"; };
+		CBF08D781CA98F0F00470A6E /* solution.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = solution.c; sourceTree = "<group>"; };
+		CBF08D791CA98F0F00470A6E /* solution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = solution.h; sourceTree = "<group>"; };
+		CBF08D7B1CA9941700470A6E /* instance.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = instance.c; sourceTree = "<group>"; };
+		CBF08D7C1CA9941700470A6E /* instance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance.h; sourceTree = "<group>"; };
 		CBFE2BC01C83A9D100ED8F98 /* best-known.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "best-known.txt"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -69,6 +75,10 @@
 				CB7AD4941C7A171600BA4676 /* main.c */,
 				CB4717071C8ADDC80065EA61 /* utils.c */,
 				CB4717091C8ADDEA0065EA61 /* utils.h */,
+				CBF08D781CA98F0F00470A6E /* solution.c */,
+				CBF08D791CA98F0F00470A6E /* solution.h */,
+				CBF08D7B1CA9941700470A6E /* instance.c */,
+				CBF08D7C1CA9941700470A6E /* instance.h */,
 			);
 			path = SCP;
 			sourceTree = "<group>";
@@ -129,6 +139,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CBF08D7D1CA9941700470A6E /* instance.c in Sources */,
+				CBF08D7A1CA98F0F00470A6E /* solution.c in Sources */,
 				CB7AD4951C7A171600BA4676 /* main.c in Sources */,
 				CB4717081C8ADDC80065EA61 /* utils.c in Sources */,
 			);

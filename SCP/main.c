@@ -16,11 +16,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <math.h>
 #include <string.h>
 #include <limits.h>
 
+#include "instance.h"
+#include "solution.h"
 #include "utils.h"
 
 
@@ -31,62 +31,8 @@ char *scp_file="";
 /** Variables to activate algorithms **/
 int ch1=0, ch2=0, ch3=0, ch4=0, bi=0, fi=0, re=0;
 
-/** Instance static variables **/
-int m;            /* number of rows = elements */
-int n;            /* number of columns = sets */
-int **row;        /* row[i] rows that are covered by column i */
-int **col;        /* col[i] columns that cover row i */
-int *ncol;        /* ncol[i] number of columns that cover row i */
-int *nrow;        /* nrow[i] number of rows that are covered by column i */
-int *cost;        /* cost[i] cost of column i  */
 
-int *sorted_by_weight;
-
-/** Holds all solution information **/
-struct Solution {
-    int *x;           /* x[i] 0,1 if column i is selected */
-    int *y;           /* y[i] 0,1 if row i covered by the actual solution */
-    /** Note: Use incremental updates for the solution **/
-    int fx;           /* sum of the cost of the columns selected in the solution (can be partial) */
-
-    /** Dynamic variables **/
-    /** Note: use dynamic variables to make easier the construction and modification of solutions.  **/
-    /**       these are just examples of useful variables.                                          **/
-    /**       these variables need to be updated every time a column is added to a partial solution **/
-    /**       or when a complete solution is modified*/
-    int used_sets;
-    int **col_cover;   /* col_colver[i] selected columns that cover row i */
-    int *ncol_cover;   /* number of selected columns that cover row i */
-};
-
-extern struct Solution *initialize();
-
-struct Solution *copy_solution(struct Solution *source) {
-    int i;
-    struct Solution *new_sol = initialize();
-    new_sol->used_sets = source->used_sets;
-    new_sol->fx = source->fx;
-
-    memcpy(new_sol->x, source->x, n * sizeof(int));
-    memcpy(new_sol->y, source->y, m * sizeof(int));
-
-    for (i=0; i<m; i++) {
-        memcpy(new_sol->col_cover[i], source->col_cover[i], source->ncol_cover[i] * sizeof(int));
-    }
-    memcpy(new_sol->ncol_cover, source->ncol_cover, m * sizeof(int));
-
-    return new_sol;
-}
-
-/** Free all memory of a solution **/
-void free_solution(struct Solution *sol) {
-    free((void *) sol->x);
-    free((void *) sol->y);
-    free((void **) sol->col_cover);
-    free((void *) sol->ncol_cover);
-    free((void *) sol);
-    return;
-}
+struct Instance *instance;
 
 
 void usage(){
@@ -142,7 +88,7 @@ void read_parameters(int argc, char *argv[]) {
             exit( EXIT_FAILURE );
         }
     }
-
+    
     if( (scp_file == NULL) || ((scp_file != NULL) && (scp_file[0] == '\0'))){
         printf("Error: --instance must be provided.\n");
         usage();
@@ -160,128 +106,9 @@ void read_parameters(int argc, char *argv[]) {
         usage();
         exit( EXIT_FAILURE );
     }
-
+    
 }
 
-/*** Read instance in the OR-LIBRARY format ***/
-void read_scp(char *filename) {
-    int h,i,j;
-    int *k;
-    FILE *fp = fopen(filename, "r" );
-
-    if (fscanf(fp,"%d",&m)!=1)   /* number of rows = elements */
-        error_reading_file("ERROR: there was an error reading instance file.");
-    if (fscanf(fp,"%d",&n)!=1)   /* number of columns  = sets*/
-        error_reading_file("ERROR: there was an error reading instance file.");
-
-    /* Cost of the n columns */
-    cost = (int *) mymalloc(n*sizeof(int));
-    for (j=0; j<n; j++)
-        if (fscanf(fp,"%d",&cost[j]) !=1)
-            error_reading_file("ERROR: there was an error reading instance file.");
-
-    /* Info of columns that cover each row */
-    col  = (int **) mymalloc(m*sizeof(int *)); //indexes of columns that cover each row
-    ncol = (int *) mymalloc(m*sizeof(int)); //nr of columns that cover each row
-    for (i=0; i<m; i++) {
-        if (fscanf(fp,"%d",&ncol[i])!=1) //First: read nr of sets that cover the element
-            error_reading_file("ERROR: there was an error reading instance file.");
-        col[i] = (int *) mymalloc(ncol[i]*sizeof(int));
-        for (h=0; h<ncol[i]; h++) {
-            if( fscanf(fp,"%d",&col[i][h])!=1 )
-                error_reading_file("ERROR: there was an error reading instance file.");
-            col[i][h]--; //I suppose in the instance file they start indexing at 1...
-        }
-    }
-
-    /* Info of rows that are covered by each column */
-    row  = (int **) mymalloc(n*sizeof(int *)); //Indexes of rows that are covered by each column
-    nrow = (int *) mymalloc(n*sizeof(int)); //Nr of rows that are covered by each column
-    k    = (int *) mymalloc(n*sizeof(int));
-    for (j=0; j<n; j++) nrow[j]=0;
-    for (i=0; i<m; i++) {
-        for (h=0; h<ncol[i]; h++)
-            nrow[col[i][h]]++;
-    }
-    for (j=0; j<n; j++) {
-        row[j] = (int *) mymalloc(nrow[j]*sizeof(int));
-        k[j]   = 0;
-    }
-    for (i=0;i<m;i++) {
-        for (h=0;h<ncol[i];h++) {
-            row[col[i][h]][k[col[i][h]]] = i;
-            k[col[i][h]]++;
-        }
-    }
-    free((void *)k);
-}
-
-/*** Use level>=1 to print more info (check the correct reading) */
-void print_instance(int level){
-    int i;
-
-    printf("**********************************************\n");
-    printf("  SCP INSTANCE: %s\n", scp_file);
-    printf("  PROBLEM SIZE\t m = %d\t n = %d\n", m, n);
-
-    if(level >=1){
-        printf("  COLUMN COST:\n");
-        for(i=0; i<n;i++)
-            printf("%d ",cost[i]);
-        printf("\n\n");
-        printf("  NUMBER OF ROWS COVERED BY COLUMN 1 is %d\n", nrow[0] );
-        for(i=0; i<nrow[0];i++)
-            printf("%d ", row[0][i]);
-        printf("\n");
-        printf("  NUMBER OF COLUMNS COVERING ROW 1 is %d\n", ncol[0] );
-        for(i=0; i<ncol[0];i++)
-            printf("%d ", col[0][i]);
-        printf("\n");
-    }
-
-    printf("**********************************************\n\n");
-
-}
-
-/*** Use this function to initialize other variables of the algorithms **/
-struct Solution *initialize(){
-    struct Solution *sol = mymalloc(sizeof(struct Solution));
-    int i, j;
-    sol->x = (int *) mymalloc(n*sizeof(int));
-    for (i = 0; i < n; i++) {sol->x[i] = 0;}
-    sol->y = (int *) mymalloc(m*sizeof(int));
-    for (i = 0; i < m; i++) {sol->y[i] = 0;}
-
-    sol->col_cover = (int **) mymalloc(m*sizeof(int *));
-    for (i=0; i<m; i++) {
-        sol->col_cover[i] = (int *) mymalloc(ncol[i]*sizeof(int));
-        for (j = 0; j < ncol[i]; j++) {
-            sol->col_cover[i][j] = -1;
-        }
-    }
-
-    sol->ncol_cover = (int *) mymalloc(m*sizeof(int));
-    for (i = 0; i<m; i++) {sol->ncol_cover[i] = 0;}
-    sol->fx = 0;
-    sol->used_sets = 0;
-    return sol;
-}
-
-/** Check if some elements aren't covered by a set yet in the current solution **/
-int uncovered_elements(struct Solution *sol) {
-    int i;
-    for (i = 0; i < m; i++)
-        if(!sol->y[i]) return 1;
-    return 0;
-}
-
-int added_elements(struct Solution *sol, int set) {
-    int count = 0;
-    int i;
-    for (i = 0; i < nrow[set]; i++)
-        if (!sol->y[row[set][i]]) count++;
-    return count;
-}
 
 /** Choose a set according to the chosen algorithm(s) **/
 int choose_set(struct Solution *sol, int exclude_set) {
@@ -290,12 +117,12 @@ int choose_set(struct Solution *sol, int exclude_set) {
         int found_element = 0;
         int chosen_element = 0;
         while (!found_element) {
-            chosen_element = rand() % m;
+            chosen_element = rand() % instance->m;
             if(!sol->y[chosen_element]) found_element = 1;
         }
         int chosen_set = exclude_set;
         while (chosen_set == exclude_set) {
-            chosen_set = col[chosen_element][rand() % ncol[chosen_element]];
+            chosen_set = instance->col[chosen_element][rand() % instance->ncol[chosen_element]];
         }
         return chosen_set;
     } else if (ch2 || ch3 || ch4) {
@@ -303,18 +130,18 @@ int choose_set(struct Solution *sol, int exclude_set) {
         float best_cost = -1;
         float current_cost;
         int extra_covered;
-        for (i = 0; i < n; i++) {
-            extra_covered = added_elements(sol, i);
+        for (i = 0; i < instance->n; i++) {
+            extra_covered = added_elements(instance, sol, i);
             if(extra_covered == 0 || i == exclude_set) continue; //Skip the set if it doesn't cover elements that weren't covered yet
             //Calculate cost according to chosen algorithm
-            if(ch2) current_cost = cost[i];
-            else if(ch3) current_cost = (float) cost[i] / (float) nrow[i];
-            else current_cost = (float) cost[i] / (float) extra_covered;
-
+            if(ch2) current_cost = instance->cost[i];
+            else if(ch3) current_cost = (float) instance->cost[i] / (float) instance->nrow[i];
+            else current_cost = (float) instance->cost[i] / (float) extra_covered;
+            
             if (current_cost < best_cost && !sol->x[i] && best_cost >= 0) { //Cost of set we're handling is better than the best one we currently have
                 best_set = i;
                 best_cost = current_cost;
-            } else if (current_cost == best_cost && nrow[i] > nrow[best_set] && !sol->x[i] && best_cost >= 0) { //Cost is equal but new one covers more elements
+            } else if (current_cost == best_cost && instance->nrow[i] > instance->nrow[best_set] && !sol->x[i] && best_cost >= 0) { //Cost is equal but new one covers more elements
                 best_set = i;
                 best_cost = current_cost;
             } else if (!sol->x[i] && (best_cost < 0)) { //Initialize index and cost with the first set that isn't already included (and isn't redundant)
@@ -325,46 +152,24 @@ int choose_set(struct Solution *sol, int exclude_set) {
         return best_set;
     } else {
         printf("No algorithm passed, choosing randomly\n");
-        return rand() % n;
+        return rand() % instance->n;
     }
 }
 
 /*** Build solution ***/
 void execute(struct Solution *sol, int exclude_set) {
     int chosen_set, element, i;
-    while (uncovered_elements(sol)) {
+    while (uncovered_elements(instance, sol)) {
         chosen_set = choose_set(sol, exclude_set); //Choose set according to the construction heuristic
-        for (i = 0; i < nrow[chosen_set]; i++) { //Say that we cover each element that the chosen set covers
-            element = row[chosen_set][i];
+        for (i = 0; i < instance->nrow[chosen_set]; i++) { //Say that we cover each element that the chosen set covers
+            element = instance->row[chosen_set][i];
             sol->y[element] = 1;
             sol->col_cover[element][sol->ncol_cover[element]] = chosen_set;
             sol->ncol_cover[element]++;
         }
         sol->used_sets++;
         sol->x[chosen_set] = 1;
-        sol->fx += cost[chosen_set];
-    }
-    return;
-}
-
-void remove_set(struct Solution *sol, int set) {
-    int i, j, k;
-    sol->used_sets--;
-    sol->x[set] = 0;
-    sol->fx -= cost[set];
-    for (i = 0; i < m; i++) { //Check for each element...
-        for (j = 0; j < sol->ncol_cover[i]; j++) {
-            if(sol->col_cover[i][j] == set) { //If the set to be removed covers the element...
-                for (k = j+1; k < sol->ncol_cover[i]; k++) { //then shift set indices to the left starting from j+1
-                    sol->col_cover[i][k-1] = sol->col_cover[i][k];
-                }
-                sol->ncol_cover[i]--;
-                if (!sol->ncol_cover[i]) { //No included sets cover element i anymore
-                    sol->y[i] = 0;
-                }
-                break;
-            }
-        }
+        sol->fx += instance->cost[chosen_set];
     }
     return;
 }
@@ -372,8 +177,8 @@ void remove_set(struct Solution *sol, int set) {
 
 int find_max_weight_set(struct Solution *sol, int ctr) {
     int set;
-    for (; ctr < n; ctr++) { // Start checking from the ctr'th set
-        set = sorted_by_weight[ctr];
+    for (; ctr < instance->n; ctr++) { // Start checking from the ctr'th set
+        set = instance->sorted_by_weight[ctr];
         if (sol->x[set]) break; // Stop when the set is used in the solution
     }
     return ctr;
@@ -388,10 +193,10 @@ void redundancy_elimination(struct Solution *sol) {
     while (counter) {
         counter--;
         tried = find_max_weight_set(sol, tried);
-        max_weight_set = sorted_by_weight[tried];
+        max_weight_set = instance->sorted_by_weight[tried];
         tried++;
         can_remove = 1;
-        for (i = 0; i < m; i++) {
+        for (i = 0; i < instance->m; i++) {
             covered_by_set = 0;
             for (j = 0; j < sol->ncol_cover[i]; j++) {
                 if(sol->col_cover[i][j] == max_weight_set) {
@@ -405,7 +210,7 @@ void redundancy_elimination(struct Solution *sol) {
             }
         }
         if (can_remove) {
-            remove_set(sol, max_weight_set);
+            remove_set(instance, sol, max_weight_set);
         }
     }
     return;
@@ -429,14 +234,14 @@ void best_improvement(struct Solution **sol) {
         tried = 0;
         improvement = 0;
         int counter = (*best_solution)->used_sets;
-        struct Solution *current_best = copy_solution(*best_solution);
+        struct Solution *current_best = copy_solution(instance, *best_solution);
         while (counter) {
             counter--;
             tried = find_max_weight_set(*best_solution, tried); //get set with highest cost starting from tried'th set
-            max_weight_set = sorted_by_weight[tried];
+            max_weight_set = instance->sorted_by_weight[tried];
             tried++;
-            struct Solution *new_sol = copy_solution(*best_solution);
-            remove_set(new_sol, max_weight_set); //Remove set from the new solution...
+            struct Solution *new_sol = copy_solution(instance, *best_solution);
+            remove_set(instance, new_sol, max_weight_set); //Remove set from the new solution...
             execute(new_sol, max_weight_set); //And build up the solution again without using the removed set
             if(new_sol->fx < current_best->fx) { //if move is new best improvement
                 improvement = 1;
@@ -453,7 +258,6 @@ void best_improvement(struct Solution **sol) {
     return;
 }
 
-
 void first_improvement(struct Solution **sol) {
     int max_weight_set;
     int improvement = 1;
@@ -468,10 +272,10 @@ void first_improvement(struct Solution **sol) {
         while (counter) {
             counter--;
             tried = find_max_weight_set(*best_solution, tried); //get set with highest cost starting from tried'th set
-            max_weight_set = sorted_by_weight[tried];
+            max_weight_set = instance->sorted_by_weight[tried];
             tried++;
-            struct Solution *new_sol = copy_solution(*best_solution);
-            remove_set(new_sol, max_weight_set);
+            struct Solution *new_sol = copy_solution(instance, *best_solution);
+            remove_set(instance, new_sol, max_weight_set);
             execute(new_sol, max_weight_set);
             if(new_sol->fx < (*best_solution)->fx) { //move improves
                 improvement = 1;
@@ -487,18 +291,19 @@ void first_improvement(struct Solution **sol) {
 
 /*** Use this function to finalize execution */
 void finalize(struct Solution *sol){
-    free((void **) row );
-    free((void **) col );
-    free((void *) nrow );
-    free((void *) ncol );
-    free((void *) cost );
+    free((void **) instance->row );
+    free((void **) instance->col );
+    free((void *) instance->nrow );
+    free((void *) instance->ncol );
+    free((void *) instance->cost );
+    free((void *) instance);
     free_solution(sol);
 }
 
 /** Compare the cost of 2 solutions **/
 int compare_cost(const void * a, const void * b)
 {
-    return ( cost[*(int*)b] - cost[*(int*)a] ); //cost of b - cost of a: sort from high to low cost
+    return ( instance->cost[*(int*)b] - instance->cost[*(int*)a] ); //cost of b - cost of a: sort from high to low cost
 }
 
 
@@ -506,19 +311,19 @@ int main(int argc, char *argv[]) {
     int i;
     read_parameters(argc, argv);
     srand(seed); /*set seed */
-    read_scp(scp_file);
+    instance = read_scp(scp_file);
     //print_instance(0);
-    struct Solution *sol = initialize();
+    struct Solution *sol = initialize(instance);
     execute(sol, -1); // index of set to exclude is set to -1: don't exclude a set from possible being used
     if (re || bi || fi) {
         // Sort sets using cost from high to low
-        sorted_by_weight = (int *) mymalloc(n*sizeof(int));
-        for (i = 0; i < n; i++) sorted_by_weight[i] = i;
-        qsort(sorted_by_weight, n, sizeof(int), compare_cost);
+        instance->sorted_by_weight = (int *) mymalloc(instance->n*sizeof(int));
+        for (i = 0; i < instance->n; i++) instance->sorted_by_weight[i] = i;
+        qsort(instance->sorted_by_weight, instance->n, sizeof(int), compare_cost);
         if (re) redundancy_elimination(sol);
         if (bi) best_improvement(&sol);
         else if (fi) first_improvement(&sol);
-        free((void *) sorted_by_weight);
+        free((void *) instance->sorted_by_weight);
     }
     printf("%i", sol->fx);
     finalize(sol);
