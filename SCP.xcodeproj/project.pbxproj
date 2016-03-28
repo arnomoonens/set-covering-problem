@@ -11,6 +11,7 @@
 		CB7AD4951C7A171600BA4676 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = CB7AD4941C7A171600BA4676 /* main.c */; };
 		CBF08D7A1CA98F0F00470A6E /* solution.c in Sources */ = {isa = PBXBuildFile; fileRef = CBF08D781CA98F0F00470A6E /* solution.c */; };
 		CBF08D7D1CA9941700470A6E /* instance.c in Sources */ = {isa = PBXBuildFile; fileRef = CBF08D7B1CA9941700470A6E /* instance.c */; };
+		CBF08D801CA9CD1500470A6E /* ils.c in Sources */ = {isa = PBXBuildFile; fileRef = CBF08D7E1CA9CD1500470A6E /* ils.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -36,6 +37,8 @@
 		CBF08D791CA98F0F00470A6E /* solution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = solution.h; sourceTree = "<group>"; };
 		CBF08D7B1CA9941700470A6E /* instance.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = instance.c; sourceTree = "<group>"; };
 		CBF08D7C1CA9941700470A6E /* instance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance.h; sourceTree = "<group>"; };
+		CBF08D7E1CA9CD1500470A6E /* ils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ils.c; sourceTree = "<group>"; };
+		CBF08D7F1CA9CD1500470A6E /* ils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ils.h; sourceTree = "<group>"; };
 		CBFE2BC01C83A9D100ED8F98 /* best-known.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "best-known.txt"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -79,6 +82,8 @@
 				CBF08D791CA98F0F00470A6E /* solution.h */,
 				CBF08D7B1CA9941700470A6E /* instance.c */,
 				CBF08D7C1CA9941700470A6E /* instance.h */,
+				CBF08D7E1CA9CD1500470A6E /* ils.c */,
+				CBF08D7F1CA9CD1500470A6E /* ils.h */,
 			);
 			path = SCP;
 			sourceTree = "<group>";
@@ -139,6 +144,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CBF08D801CA9CD1500470A6E /* ils.c in Sources */,
 				CBF08D7D1CA9941700470A6E /* instance.c in Sources */,
 				CBF08D7A1CA98F0F00470A6E /* solution.c in Sources */,
 				CB7AD4951C7A171600BA4676 /* main.c in Sources */,
