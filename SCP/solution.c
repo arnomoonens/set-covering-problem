@@ -50,6 +50,20 @@ struct Solution *copy_solution(struct Instance *instance, struct Solution *sourc
     return new_sol;
 }
 
+void add_set(struct Instance *instance, struct Solution *sol, int set) {
+    int i, element;
+    for (i = 0; i < instance->nrow[set]; i++) { //Say that we cover each element that the chosen set covers
+        element = instance->row[set][i];
+        sol->y[element] = 1;
+        sol->col_cover[element][sol->ncol_cover[element]] = set;
+        sol->ncol_cover[element]++;
+    }
+    sol->used_sets++;
+    sol->x[set] = 1;
+    sol->fx += instance->cost[set];
+    return;
+}
+
 
 void remove_set(struct Instance *instance, struct Solution *sol, int set) {
     int i, j, k;

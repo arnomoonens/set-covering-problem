@@ -86,10 +86,10 @@ void ils_search(struct Instance *instance, struct Solution *sol, double ro1, dou
         int chosen_set = -1;
         while (chosen_set < 0 || !candidate_sets[chosen_set]) { //Randomly choose out of the candidate sets
             chosen_set = rand() % instance->n;
-            //add_set(instance, sol, chosen_set); //add after refactoring
+            add_set(instance, sol, chosen_set);
         }
     }
-    //redunancy_elimination(instance, sol); //add after refactoring
+    redundancy_elimination(instance, sol); //add after refactoring
 }
 
 

@@ -56,18 +56,10 @@ int choose_set(struct Instance *instance, struct Solution *sol, int ch, int excl
 
 /*** Build solution ***/
 void execute(struct Instance *instance, struct Solution *sol, int ch, int exclude_set) {
-    int chosen_set, element, i;
+    int chosen_set;
     while (uncovered_elements(instance, sol)) {
         chosen_set = choose_set(instance, sol, ch, exclude_set); //Choose set according to the construction heuristic
-        for (i = 0; i < instance->nrow[chosen_set]; i++) { //Say that we cover each element that the chosen set covers
-            element = instance->row[chosen_set][i];
-            sol->y[element] = 1;
-            sol->col_cover[element][sol->ncol_cover[element]] = chosen_set;
-            sol->ncol_cover[element]++;
-        }
-        sol->used_sets++;
-        sol->x[chosen_set] = 1;
-        sol->fx += instance->cost[chosen_set];
+        add_set(instance, sol, chosen_set);
     }
     return;
 }
