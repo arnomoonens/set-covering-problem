@@ -2,6 +2,8 @@
 //  solution.h
 //  SCP
 //
+// Code or initializing, manipulating and freeing a solution
+//
 //  Created by Arno Moonens on 28/03/16.
 //  Copyright © 2016 Arno Moonens. All rights reserved.
 //

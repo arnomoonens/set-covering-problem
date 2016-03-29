@@ -22,6 +22,8 @@
 #include "instance.h"
 #include "solution.h"
 #include "utils.h"
+#include "complete.h"
+#include "improvement.h"
 
 
 /** Algorithm parameters **/
@@ -29,7 +31,7 @@ int seed=1234567;
 char *scp_file="";
 
 /** Variables to activate algorithms **/
-int ch1=0, ch2=0, ch3=0, ch4=0, bi=0, fi=0, re=0;
+int ch=0, bi=0, fi=0, re=0;
 
 
 struct Instance *instance;
@@ -69,13 +71,13 @@ void read_parameters(int argc, char *argv[]) {
             scp_file=argv[i+1];
             i+=1;
         } else if (strcmp(argv[i], "--ch1") == 0) {
-            ch1=1;
+            ch=1;
         } else if (strcmp(argv[i], "--ch2") == 0) {
-            ch2=1;
+            ch=2;
         } else if (strcmp(argv[i], "--ch3") == 0) {
-            ch3=1;
+            ch=3;
         } else if (strcmp(argv[i], "--ch4") == 0) {
-            ch4=1;
+            ch=4;
         } else if (strcmp(argv[i], "--bi") == 0) {
             bi=1;
         } else if (strcmp(argv[i], "--fi") == 0) {
@@ -95,7 +97,7 @@ void read_parameters(int argc, char *argv[]) {
         exit( EXIT_FAILURE );
     }
     
-    if (ch1 + ch2 + ch3 + ch4 != 1) {
+    if (ch == 0) {
         printf("Error: exactly one of --ch1, --ch2, --ch3 and --ch4 needs to be provided.\n");
         usage();
         exit( EXIT_FAILURE );
