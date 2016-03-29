@@ -88,6 +88,10 @@
 				CBF08D791CA98F0F00470A6E /* solution.h */,
 				CBF08D7B1CA9941700470A6E /* instance.c */,
 				CBF08D7C1CA9941700470A6E /* instance.h */,
+				CB5969F91CAA79FB006B9A18 /* improvement.c */,
+				CB5969FA1CAA79FB006B9A18 /* improvement.h */,
+				CB5969FC1CAA7A7A006B9A18 /* complete.c */,
+				CB5969FD1CAA7A7A006B9A18 /* complete.h */,
 				CBF08D7E1CA9CD1500470A6E /* ils.c */,
 				CBF08D7F1CA9CD1500470A6E /* ils.h */,
 			);

@@ -90,6 +90,47 @@ int added_elements(struct Instance *instance, struct Solution *sol, int set) {
     return count;
 }
 
+int find_max_weight_set(struct Instance *instance, struct Solution *sol, int ctr) {
+    int set;
+    for (; ctr < instance->n; ctr++) { // Start checking from the ctr'th set
+        set = instance->sorted_by_weight[ctr];
+        if (sol->x[set]) break; // Stop when the set is used in the solution
+    }
+    return ctr;
+}
+
+
+/*** Remove redundant sets from the solution***/
+void redundancy_elimination(struct Instance *instance, struct Solution *sol) {
+    int i, j, max_weight_set, can_remove, covered_by_set;
+    int tried = 0;
+    int counter = sol->used_sets;
+    while (counter) {
+        counter--;
+        tried = find_max_weight_set(instance, sol, tried);
+        max_weight_set = instance->sorted_by_weight[tried];
+        tried++;
+        can_remove = 1;
+        for (i = 0; i < instance->m; i++) {
+            covered_by_set = 0;
+            for (j = 0; j < sol->ncol_cover[i]; j++) {
+                if(sol->col_cover[i][j] == max_weight_set) {
+                    covered_by_set = 1;
+                    break;
+                }
+            }
+            if (covered_by_set && (sol->ncol_cover[i] == 1)) {
+                can_remove = 0;
+                break;
+            }
+        }
+        if (can_remove) {
+            remove_set(instance, sol, max_weight_set);
+        }
+    }
+    return;
+}
+
 /** Return maximum cost of sets in a solution **/
 int max_cost(struct Instance *instance, struct Solution *sol) {
     int i;

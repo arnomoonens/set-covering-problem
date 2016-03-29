@@ -38,6 +38,8 @@ struct Solution *copy_solution(struct Instance *instance, struct Solution *sourc
 void remove_set(struct Instance *instance, struct Solution *sol, int set);
 int uncovered_elements(struct Instance *instance, struct Solution *sol);
 int added_elements(struct Instance *instance, struct Solution *sol, int set);
+int find_max_weight_set(struct Instance *instance, struct Solution *sol, int ctr);
+void redundancy_elimination(struct Instance *instance, struct Solution *sol);
 int max_cost(struct Instance *instance, struct Solution *sol);
 void free_solution(struct Solution *sol);
 
