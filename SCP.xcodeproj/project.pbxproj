@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		CB4717081C8ADDC80065EA61 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = CB4717071C8ADDC80065EA61 /* utils.c */; };
+		CB5969FB1CAA79FB006B9A18 /* improvement.c in Sources */ = {isa = PBXBuildFile; fileRef = CB5969F91CAA79FB006B9A18 /* improvement.c */; };
+		CB5969FE1CAA7A7A006B9A18 /* complete.c in Sources */ = {isa = PBXBuildFile; fileRef = CB5969FC1CAA7A7A006B9A18 /* complete.c */; };
 		CB7AD4951C7A171600BA4676 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = CB7AD4941C7A171600BA4676 /* main.c */; };
 		CBF08D7A1CA98F0F00470A6E /* solution.c in Sources */ = {isa = PBXBuildFile; fileRef = CBF08D781CA98F0F00470A6E /* solution.c */; };
 		CBF08D7D1CA9941700470A6E /* instance.c in Sources */ = {isa = PBXBuildFile; fileRef = CBF08D7B1CA9941700470A6E /* instance.c */; };
@@ -29,6 +31,10 @@
 		CB27AF551C81B6CC00BC6D51 /* run.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = run.sh; sourceTree = "<group>"; };
 		CB4717071C8ADDC80065EA61 /* utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
 		CB4717091C8ADDEA0065EA61 /* utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
+		CB5969F91CAA79FB006B9A18 /* improvement.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = improvement.c; sourceTree = "<group>"; };
+		CB5969FA1CAA79FB006B9A18 /* improvement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = improvement.h; sourceTree = "<group>"; };
+		CB5969FC1CAA7A7A006B9A18 /* complete.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = complete.c; sourceTree = "<group>"; };
+		CB5969FD1CAA7A7A006B9A18 /* complete.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = complete.h; sourceTree = "<group>"; };
 		CB7AD4911C7A171600BA4676 /* SCP */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SCP; sourceTree = BUILT_PRODUCTS_DIR; };
 		CB7AD4941C7A171600BA4676 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		CB7AD49D1C7A174000BA4676 /* scp42.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = scp42.txt; path = ../../scp42.txt; sourceTree = "<group>"; };
@@ -79,6 +85,10 @@
 				CBF08D791CA98F0F00470A6E /* solution.h */,
 				CBF08D7B1CA9941700470A6E /* instance.c */,
 				CBF08D7C1CA9941700470A6E /* instance.h */,
+				CB5969F91CAA79FB006B9A18 /* improvement.c */,
+				CB5969FA1CAA79FB006B9A18 /* improvement.h */,
+				CB5969FC1CAA7A7A006B9A18 /* complete.c */,
+				CB5969FD1CAA7A7A006B9A18 /* complete.h */,
 			);
 			path = SCP;
 			sourceTree = "<group>";
@@ -140,8 +150,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				CBF08D7D1CA9941700470A6E /* instance.c in Sources */,
+				CB5969FB1CAA79FB006B9A18 /* improvement.c in Sources */,
 				CBF08D7A1CA98F0F00470A6E /* solution.c in Sources */,
 				CB7AD4951C7A171600BA4676 /* main.c in Sources */,
+				CB5969FE1CAA7A7A006B9A18 /* complete.c in Sources */,
 				CB4717081C8ADDC80065EA61 /* utils.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -2,6 +2,8 @@
 //  instance.h
 //  SCP
 //
+// Code for building and printing an instance
+//
 //  Created by Arno Moonens on 28/03/16.
 //  Copyright © 2016 Arno Moonens. All rights reserved.
 //

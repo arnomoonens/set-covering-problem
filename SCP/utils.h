@@ -2,6 +2,8 @@
 //  utils.h
 //  SCP
 //
+// Util functions
+//
 //  Created by Arno Moonens on 5/03/16.
 //  Copyright © 2016 Arno Moonens. All rights reserved.
 //
