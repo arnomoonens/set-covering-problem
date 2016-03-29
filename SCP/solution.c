@@ -90,6 +90,18 @@ int added_elements(struct Instance *instance, struct Solution *sol, int set) {
     return count;
 }
 
+/** Return maximum cost of sets in a solution **/
+int max_cost(struct Instance *instance, struct Solution *sol) {
+    int i;
+    int max = 0;
+    for (i = 0; i<instance->n; i++) {
+        if (sol->x[i] && instance->cost[i] > max) {
+            max = instance->cost[i];
+        }
+    }
+    return max;
+}
+
 /** Free all memory of a solution **/
 void free_solution(struct Solution *sol) {
     free((void *) sol->x);

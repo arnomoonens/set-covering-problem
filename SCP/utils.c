@@ -18,5 +18,5 @@ void error_reading_file(char *text){
 
 //WRITE AS MACRO INSTEAD?
 int random_with_probability(double p) {
-    return ((double)rand() / (double)RAND_MAX) > p;
+    return ((double)rand() / (double)RAND_MAX) < p;
 }

@@ -16,6 +16,6 @@
 #include "solution.h"
 #include "utils.h"
 
-void ils_execute(struct Instance *instance, struct Solution **sol, double maxtime, double T, double TL, double CF);
+void ils_execute(struct Instance *instance, struct Solution **sol, double maxtime, double T, double TL, double CF, double ro1, double ro2);
 
 #endif /* ils_h */

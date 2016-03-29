@@ -157,7 +157,7 @@ int choose_set(struct Solution *sol, int exclude_set) {
 }
 
 /*** Build solution ***/
-void execute(struct Solution *sol, int exclude_set) {
+void execute(struct Instance *instance, struct Solution *sol, int exclude_set) {
     int chosen_set, element, i;
     while (uncovered_elements(instance, sol)) {
         chosen_set = choose_set(sol, exclude_set); //Choose set according to the construction heuristic
@@ -186,7 +186,7 @@ int find_max_weight_set(struct Solution *sol, int ctr) {
 
 
 /*** Remove redundant sets from the solution***/
-void redundancy_elimination(struct Solution *sol) {
+void redundancy_elimination(struct Instance *instance, struct Solution *sol) {
     int i, j, max_weight_set, can_remove, covered_by_set;
     int tried = 0;
     int counter = sol->used_sets;
@@ -223,7 +223,7 @@ void redundancy_elimination(struct Solution *sol) {
  - Calculate and save cost
  - keep solution with lowest cost
  **/
-void best_improvement(struct Solution **sol) {
+void best_improvement(struct Instance *instance, struct Solution **sol) {
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
@@ -242,7 +242,7 @@ void best_improvement(struct Solution **sol) {
             tried++;
             struct Solution *new_sol = copy_solution(instance, *best_solution);
             remove_set(instance, new_sol, max_weight_set); //Remove set from the new solution...
-            execute(new_sol, max_weight_set); //And build up the solution again without using the removed set
+            execute(instance, new_sol, max_weight_set); //And build up the solution again without using the removed set
             if(new_sol->fx < current_best->fx) { //if move is new best improvement
                 improvement = 1;
                 free_solution(current_best);
@@ -252,13 +252,13 @@ void best_improvement(struct Solution **sol) {
         if (improvement) {
             free_solution(*best_solution);
             *best_solution = current_best; //apply best move
-            redundancy_elimination(*best_solution);
+            redundancy_elimination(instance, *best_solution);
         }
     }
     return;
 }
 
-void first_improvement(struct Solution **sol) {
+void first_improvement(struct Instance *instance, struct Solution **sol) {
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
@@ -276,12 +276,12 @@ void first_improvement(struct Solution **sol) {
             tried++;
             struct Solution *new_sol = copy_solution(instance, *best_solution);
             remove_set(instance, new_sol, max_weight_set);
-            execute(new_sol, max_weight_set);
+            execute(instance, new_sol, max_weight_set);
             if(new_sol->fx < (*best_solution)->fx) { //move improves
                 improvement = 1;
                 free_solution(*best_solution);
                 *best_solution = new_sol; //apply move
-                redundancy_elimination(*best_solution);
+                redundancy_elimination(instance, *best_solution);
                 break;
             }
         }
@@ -314,15 +314,15 @@ int main(int argc, char *argv[]) {
     instance = read_scp(scp_file);
     //print_instance(0);
     struct Solution *sol = initialize(instance);
-    execute(sol, -1); // index of set to exclude is set to -1: don't exclude a set from possible being used
+    execute(instance, sol, -1); // index of set to exclude is set to -1: don't exclude a set from possible being used
     if (re || bi || fi) {
         // Sort sets using cost from high to low
         instance->sorted_by_weight = (int *) mymalloc(instance->n*sizeof(int));
         for (i = 0; i < instance->n; i++) instance->sorted_by_weight[i] = i;
         qsort(instance->sorted_by_weight, instance->n, sizeof(int), compare_cost);
-        if (re) redundancy_elimination(sol);
-        if (bi) best_improvement(&sol);
-        else if (fi) first_improvement(&sol);
+        if (re) redundancy_elimination(instance, sol);
+        if (bi) best_improvement(instance, &sol);
+        else if (fi) first_improvement(instance, &sol);
         free((void *) instance->sorted_by_weight);
     }
     printf("%i", sol->fx);

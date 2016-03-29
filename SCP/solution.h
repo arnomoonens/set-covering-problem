@@ -16,8 +16,8 @@
 
 /** Holds all solution information **/
 struct Solution {
-    int *x;           /* x[i] 0,1 if column i is selected */
-    int *y;           /* y[i] 0,1 if row i covered by the actual solution */
+    int *x;           /* x[i] 0,1 if column (= set) i is selected */
+    int *y;           /* y[i] 0,1 if row (=element) i covered by the actual solution */
     /** Note: Use incremental updates for the solution **/
     int fx;           /* sum of the cost of the columns selected in the solution (can be partial) */
     
@@ -36,6 +36,7 @@ struct Solution *copy_solution(struct Instance *instance, struct Solution *sourc
 void remove_set(struct Instance *instance, struct Solution *sol, int set);
 int uncovered_elements(struct Instance *instance, struct Solution *sol);
 int added_elements(struct Instance *instance, struct Solution *sol, int set);
+int max_cost(struct Instance *instance, struct Solution *sol);
 void free_solution(struct Solution *sol);
 
 #endif /* solution_h */
