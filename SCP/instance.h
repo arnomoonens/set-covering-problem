@@ -29,5 +29,6 @@ struct Instance {
 
 struct Instance * read_scp(char *filename);
 void print_instance(struct Instance *instance, int level, char *scp_file);
+int set_covers_element(struct Instance *instance, int set, int element);
 
 #endif /* instance_h */

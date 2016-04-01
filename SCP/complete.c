@@ -12,8 +12,8 @@
 int choose_set(struct Instance *instance, struct Solution *sol, int ch, int exclude_set) {
     int i;
     if (ch == 1) {
-        int found_element = 0;
-        int chosen_element = 0;
+        int found_element = 0; //0 or 1: says whether a good element is found or not
+        int chosen_element = 0; //actual id of the element
         while (!found_element) {
             chosen_element = rand() % instance->m;
             if(!sol->y[chosen_element]) found_element = 1;
