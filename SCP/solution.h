@@ -42,6 +42,7 @@ int added_elements(struct Instance *instance, struct Solution *sol, int set);
 int find_max_weight_set(struct Instance *instance, struct Solution *sol, int ctr);
 void redundancy_elimination(struct Instance *instance, struct Solution *sol);
 int max_cost(struct Instance *instance, struct Solution *sol);
+int lowest_covering_set(struct Instance *instance, struct Solution *sol, int element);
 void free_solution(struct Solution *sol);
 
 #endif /* solution_h */
