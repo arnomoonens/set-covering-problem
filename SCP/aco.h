@@ -13,13 +13,13 @@
 #define aco_h
 
 #include <stdio.h>
-
+#include <time.h>
+#include <limits.h>
 
 #include "utils.h"
 #include "instance.h"
 #include "solution.h"
 
-
-void aco_construct(struct Instance *instance, struct Solution *sol, double *pheromones, double *heuristic_factor);
+struct Solution * aco_execute(struct Instance *instance, double maxtime, int nants, double beta, double ro, double epsilon);
 
 #endif /* aco_h */

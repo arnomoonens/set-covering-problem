@@ -64,7 +64,7 @@ void add_set(struct Instance *instance, struct Solution *sol, int set) {
     return;
 }
 
-
+/** Remove a set from a solution **/
 void remove_set(struct Instance *instance, struct Solution *sol, int set) {
     int i, j, k;
     sol->used_sets--;
@@ -104,6 +104,7 @@ int added_elements(struct Instance *instance, struct Solution *sol, int set) {
     return count;
 }
 
+/** Find the ctr'th highest cost set of an instance **/
 int find_max_weight_set(struct Instance *instance, struct Solution *sol, int ctr) {
     int set;
     for (; ctr < instance->n; ctr++) { // Start checking from the ctr'th set
@@ -153,6 +154,7 @@ int max_cost(struct Instance *instance, struct Solution *sol) {
     return max;
 }
 
+/** Set with lowest cost that covers an element **/
 int lowest_covering_set(struct Instance *instance, struct Solution *sol, int element) {
     int i = 0, lowest = 0, lowest_c = -1, set, c;
     for (; i < sol->ncol_cover[element]; i++) {

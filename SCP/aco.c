@@ -9,6 +9,7 @@
 #include "aco.h"
 
 
+extern double heuristic_information(struct Instance *instance, struct Solution *sol, int set);
 
 /** Workings of construction (SROM):
  while(uncovered_elements(sol)):
@@ -17,11 +18,10 @@
     Select a column j that covers i according to the probab. distribution p(j)=(tau*n)/sum_columnscoveringi(tau*n)
 
 **/
-void aco_construct(struct Instance *instance, struct Solution *sol, double *pheromones, double *heuristic_factor) {
+void aco_construct(struct Instance *instance, struct Solution *sol, double *pheromones_trails, double *heuristic_factor) {
     int i, found_element, chosen_element, chosen_set;
-    double *pdf;
     double denominator;
-    pdf = (double *) mymalloc(instance->n * sizeof(double));
+    double *pdf = (double *) mymalloc(instance->n * sizeof(double));
     while (uncovered_elements(instance, sol)) {
         found_element = 0;
         chosen_element = 0;
@@ -31,11 +31,11 @@ void aco_construct(struct Instance *instance, struct Solution *sol, double *pher
         }
         denominator = 0;
         for(i = 0; i < instance->ncol[chosen_element]; i++) { // Calculate denominator (used in pdf)
-            denominator += pheromones[instance->col[chosen_element][i]]*heuristic_factor[instance->col[chosen_element][i]]; //multiply heuristic factor by beta (and pher. by alfa?)
+            denominator += pheromones_trails[instance->col[chosen_element][i]]*heuristic_information(instance, sol, instance->col[chosen_element][i]); //TODO: exponentiate heuristic factor by beta (and pher. by alfa?)
         }
         for(i = 0; i < instance->n; i++) { // Calculate pdf itself
             if (set_covers_element(instance, i, chosen_element)) {
-                pdf[i] = pheromones[i]*heuristic_factor[i] / denominator;
+                pdf[i] = pheromones_trails[i]*heuristic_information(instance, sol,i) / denominator;
             } else {
                 pdf[i] = 0;
             }
@@ -43,6 +43,7 @@ void aco_construct(struct Instance *instance, struct Solution *sol, double *pher
         chosen_set = random_with_pdf(pdf, instance->n);
         add_set(instance, sol, chosen_set);
     }
+    free((void *) pdf);
     return;
 }
 
@@ -61,12 +62,29 @@ void aco_construct(struct Instance *instance, struct Solution *sol, double *pher
  Tau_min is set to epsilon*Tau_max, where epsilon (with 0 < epsilon < 1) is a ratio coefficient.
  Pheromone trails are initialized to an arbitrary high value for the purpose of achieving a higher exploration of solution space at the beginning of the algorithm.
 **/
+void update_pheromone_trails(struct Instance *instance, struct Solution *global_best, double *pheromone_trails, double ro, double tau_min, double tau_max) {
+    int i;
+    double delta_tau;
+    for (i = 0; i < instance->n; i++) {
+        if (global_best->x[i]) { // if set is used in global best
+            delta_tau = (double) 1 / (double) global_best->fx;
+        } else {
+            delta_tau = 0;
+        }
+        pheromone_trails[i] = ro * pheromone_trails[i] + delta_tau;
+        if (pheromone_trails[i] < tau_min) pheromone_trails[i] = tau_min;
+        if (pheromone_trails[i] > tau_max) pheromone_trails[i] = tau_max;
+    }
+    return;
+}
 
 
-/** Heuristic information (subgradient)
- 
- 
+/** Heuristic information
+ For a set, the heuristic information is the number of elements it covers extra divided by the cost of the set
  **/
+double heuristic_information(struct Instance *instance, struct Solution *sol, int set) {
+    return (double) added_elements(instance, sol, set) / (double) instance->cost[set];
+}
 
 
 /** Local search
@@ -83,7 +101,6 @@ void aco_construct(struct Instance *instance, struct Solution *sol, double *pher
     else:
         continue
 **/
-
 void aco_local_search(struct Instance *instance, struct Solution *sol) {
     int i, set, element, j, lowest1 = 0, lowest2 = 0;
     for (i = 0; i < instance->n; i++) {
@@ -92,7 +109,7 @@ void aco_local_search(struct Instance *instance, struct Solution *sol) {
         int nonly_covered_by_i = 0;
         int *only_covered_by_i = (int *) mymalloc(instance->nrow[set]*sizeof(int));
         for (element = 0; element < instance->m; element++) {
-            for (j = 0; sol->ncol_cover[element]; j++) {
+            for (j = 0; j < sol->ncol_cover[element]; j++) {
                 if (sol->col_cover[element][j] == set) {
                     if (sol->ncol_cover[element] == 1) {
                         only_covered_by_i[nonly_covered_by_i] = element;
@@ -117,17 +134,62 @@ void aco_local_search(struct Instance *instance, struct Solution *sol) {
             add_set(instance, sol, lowest1);
             add_set(instance, sol, lowest2);
         }
+        free((void *) only_covered_by_i);
     }
+    return;
 }
 
 /** Total framework
- 1. Get a Lagrangian multiplier vector with subgradient method
+ 1. Get a Lagrangian multiplier vector with subgradient method OR use simpler method of calculating heuristic information
  2. Initialize pheromone trails and related parameters
  3. while termination condition is not met:
  4.     for each ant i:
  5.         Construct a solution S based on SROM
  6.         Apply local search to solution S optionally
  7.     Update pheromone trails
- 8.     If the best solution is not improved for p consecutive iterations:
- 9.         Perform subgradient method and get a new Lagrangian multiplier vector
+(8.     If the best solution is not improved for p consecutive iterations:)
+(9.         Perform subgradient method and get a new Lagrangian multiplier vector)
 **/
+struct Solution * aco_execute(struct Instance *instance, double maxtime, int nants, double beta, double ro, double epsilon) {
+    int i, improved, all_set_costs = 0;
+    double tau_min, tau_max;
+    struct Solution *global_best = NULL;
+    struct Solution **ants = mymalloc(nants * sizeof(struct Solution *));
+    time_t starttime = time(0);
+    for (i = 0; i < instance->n; i++) all_set_costs += instance->cost[i];
+    tau_max = (double) 1 / ((double) 1 - ro) * (double) all_set_costs; // Is total cost of all sets instead of cost of global best at the start
+    tau_min = epsilon * tau_max;
+    double *pheromones_trails = mymalloc(instance->n * sizeof(double));
+    for (i = 0; i < instance->n; i++) pheromones_trails[i] = tau_max; // Set initial pheromone trails to tau_max
+    double *heuristic_factor = mymalloc(instance->n * sizeof(double)); // TODO: should be specified
+    while(difftime(time(0), starttime) < maxtime) {
+        printf("\r%f / %f", difftime(time(0), starttime), maxtime);
+        for (i = 0; i < nants; i++) { // For each ant...
+            ants[i] = initialize(instance);
+            aco_construct(instance, ants[i], pheromones_trails, heuristic_factor); // Construct a solution...
+            aco_local_search(instance, ants[i]); /// And apply local search
+        }
+        improved = 0;
+        for (i = 0; i < nants; i++) {
+            if (!global_best) {
+                improved = 1;
+                global_best = ants[i];
+            } else if (ants[i]->fx <= global_best->fx) {
+                improved = 1;
+                free_solution(global_best);
+                global_best = ants[i];
+            } else {
+                free_solution(ants[i]);
+            }
+        }
+        if (improved) {
+            tau_max = (double) 1 / ((double) 1 - ro) * (double) global_best->fx;
+            tau_min = epsilon * tau_max;
+        }
+        printf(" %i", global_best->fx);
+        fflush(stdout);
+        update_pheromone_trails(instance, global_best, pheromones_trails, ro, tau_min, tau_max);
+    }
+    //TODO: free all arrays and unused solutions
+    return global_best;
+}
