@@ -8,7 +8,7 @@
 
 #include "solution.h"
 
-/*** Use this function to initialize other variables of the algorithms **/
+/*** Initialize a struct Solution and all its variables **/
 struct Solution *initialize(struct Instance *instance) {
     struct Solution *sol = mymalloc(sizeof(struct Solution));
     int i, j;
@@ -33,6 +33,7 @@ struct Solution *initialize(struct Instance *instance) {
 }
 
 
+/** Copy a solution to a newly initialized one **/
 struct Solution *copy_solution(struct Instance *instance, struct Solution *source) {
     int i;
     struct Solution *new_sol = initialize(instance);
@@ -50,7 +51,23 @@ struct Solution *copy_solution(struct Instance *instance, struct Solution *sourc
     return new_sol;
 }
 
+// Add a set to the current solution
+void add_set(struct Instance *instance, struct Solution *sol, int set) {
+    int i, element;
+    for (i = 0; i < instance->nrow[set]; i++) { //Say that we cover each element that the chosen set covers
+        element = instance->row[set][i];
+        sol->y[element] = 1;
+        sol->col_cover[element][sol->ncol_cover[element]] = set;
+        sol->ncol_cover[element]++;
+    }
+    sol->used_sets++;
+    sol->x[set] = 1;
+    sol->fx += instance->cost[set];
+    return;
+}
 
+
+/** Remove a set from a solution **/
 void remove_set(struct Instance *instance, struct Solution *sol, int set) {
     int i, j, k;
     sol->used_sets--;
@@ -81,7 +98,7 @@ int uncovered_elements(struct Instance *instance, struct Solution *sol) {
     return 0;
 }
 
-/** Return how many yet uncovered elements the set would cover **/
+/** Returns how many yet uncovered elements the set would cover **/
 int added_elements(struct Instance *instance, struct Solution *sol, int set) {
     int count = 0;
     int i;
@@ -90,6 +107,7 @@ int added_elements(struct Instance *instance, struct Solution *sol, int set) {
     return count;
 }
 
+/** Find the ctr'th highest cost set of an instance **/
 int find_max_weight_set(struct Instance *instance, struct Solution *sol, int ctr) {
     int set;
     for (; ctr < instance->n; ctr++) { // Start checking from the ctr'th set
@@ -102,24 +120,20 @@ int find_max_weight_set(struct Instance *instance, struct Solution *sol, int ctr
 
 /*** Remove redundant sets from the solution***/
 void redundancy_elimination(struct Instance *instance, struct Solution *sol) {
-    int i, j, max_weight_set, can_remove, covered_by_set;
-    int tried = 0;
-    int counter = sol->used_sets;
-    while (counter) {
-        counter--;
+    int tried, i, j, max_weight_set, can_remove, covered_by_set;
+    for (tried = 0; tried < instance->n; tried++) {
         tried = find_max_weight_set(instance, sol, tried);
         max_weight_set = instance->sorted_by_weight[tried];
-        tried++;
         can_remove = 1;
         for (i = 0; i < instance->m; i++) {
             covered_by_set = 0;
-            for (j = 0; j < sol->ncol_cover[i]; j++) {
+            for (j = 0; j < sol->ncol_cover[i]; j++) { // Check if max_weight_set covers element i
                 if(sol->col_cover[i][j] == max_weight_set) {
                     covered_by_set = 1;
                     break;
                 }
             }
-            if (covered_by_set && (sol->ncol_cover[i] == 1)) {
+            if (covered_by_set && (sol->ncol_cover[i] == 1)) { // Don't remove the set if it's the only one that covers element i
                 can_remove = 0;
                 break;
             }

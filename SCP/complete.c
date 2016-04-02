@@ -8,29 +8,29 @@
 
 #include "complete.h"
 
-/** Choose a set according to the chosen algorithm(s) **/
+/** Choose a set according to the chosen algorithm ch, exluding the set exclude_set **/
 int choose_set(struct Instance *instance, struct Solution *sol, int ch, int exclude_set) {
     int i;
     if (ch == 1) {
         int found_element = 0;
         int chosen_element = 0;
-        while (!found_element) {
+        while (!found_element) { //Try random elemnts until we find one that isn't already covered
             chosen_element = rand() % instance->m;
             if(!sol->y[chosen_element]) found_element = 1;
         }
         int chosen_set = exclude_set;
-        while (chosen_set == exclude_set) {
+        while (chosen_set == exclude_set) { //Choose a random set until we find one that doesn't need to be excluded from the solution
             chosen_set = instance->col[chosen_element][rand() % instance->ncol[chosen_element]];
         }
         return chosen_set;
-    } else if (ch >= 2 && ch <= 4) {
+    } else if (ch >= 2 && ch <= 4) { // Using CH2, CH3 and CH4
         int best_set = 0;
         float best_cost = -1;
         float current_cost;
         int extra_covered;
         for (i = 0; i < instance->n; i++) {
             extra_covered = added_elements(instance, sol, i);
-            if(extra_covered == 0 || i == exclude_set) continue; //Skip the set if it doesn't cover elements that weren't covered yet
+            if(extra_covered == 0 || i == exclude_set) continue; //Skip the set if it doesn't cover elements that weren't covered already
             //Calculate cost according to chosen algorithm
             if(ch == 2) current_cost = instance->cost[i];
             else if(ch == 3) current_cost = (float) instance->cost[i] / (float) instance->nrow[i];
@@ -56,18 +56,10 @@ int choose_set(struct Instance *instance, struct Solution *sol, int ch, int excl
 
 /*** Build solution ***/
 void execute(struct Instance *instance, struct Solution *sol, int ch, int exclude_set) {
-    int chosen_set, element, i;
+    int chosen_set;
     while (uncovered_elements(instance, sol)) {
         chosen_set = choose_set(instance, sol, ch, exclude_set); //Choose set according to the construction heuristic
-        for (i = 0; i < instance->nrow[chosen_set]; i++) { //Say that we cover each element that the chosen set covers
-            element = instance->row[chosen_set][i];
-            sol->y[element] = 1;
-            sol->col_cover[element][sol->ncol_cover[element]] = chosen_set;
-            sol->ncol_cover[element]++;
-        }
-        sol->used_sets++;
-        sol->x[chosen_set] = 1;
-        sol->fx += instance->cost[chosen_set];
+        add_set(instance, sol, chosen_set); // Add the chosen set to the current solution
     }
     return;
 }

@@ -35,6 +35,7 @@ struct Solution {
 
 struct Solution *initialize(struct Instance *instance);
 struct Solution *copy_solution(struct Instance *instance, struct Solution *source);
+void add_set(struct Instance *instance, struct Solution *sol, int set);
 void remove_set(struct Instance *instance, struct Solution *sol, int set);
 int uncovered_elements(struct Instance *instance, struct Solution *sol);
 int added_elements(struct Instance *instance, struct Solution *sol, int set);

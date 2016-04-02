@@ -12,8 +12,6 @@
 /** Code implemented for Heuritics optimization class by:  **/
 /** Arno Moonens                                           **/
 
-/** Note: Remember to keep your code in order and properly commented. **/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +34,7 @@ int ch=0, bi=0, fi=0, re=0;
 
 struct Instance *instance;
 
-
+/** Print arguments that can be used when calling the program **/
 void usage(){
     printf("\nUSAGE: lsscp [param_name, param_value] [options]...\n");
     printf("Parameters:\n");
@@ -46,7 +44,7 @@ void usage(){
     printf("  --ch1: random solution construction\n");
     printf("  --ch2: static cost-based greedy values.\n");
     printf("  --ch3: static cover cost-based greedy values.\n");
-    printf("  --ch4: Adaptive cover cost-based greedy values.\n");
+    printf("  --ch4: adaptive cover cost-based greedy values.\n");
     printf("  --re: applies redundancy elimination after construction.\n");
     printf("  --bi: best improvement.\n");
     printf("  --fi: first improvement.\n");
@@ -56,7 +54,6 @@ void usage(){
 
 
 /*Read parameters from command line*/
-/*NOTE: Complete parameter list*/
 void read_parameters(int argc, char *argv[]) {
     int i;
     if(argc<=1) {
@@ -112,7 +109,7 @@ void read_parameters(int argc, char *argv[]) {
 }
 
 
-/*** Use this function to finalize execution */
+/*** Finalize execution by freeing variables */
 void finalize(struct Solution *sol){
     free((void **) instance->row );
     free((void **) instance->col );
@@ -143,6 +140,7 @@ int main(int argc, char *argv[]) {
         instance->sorted_by_weight = (int *) mymalloc(instance->n*sizeof(int));
         for (i = 0; i < instance->n; i++) instance->sorted_by_weight[i] = i;
         qsort(instance->sorted_by_weight, instance->n, sizeof(int), compare_cost);
+        // Apply reduncancy elimination and/or best improvement or first improvement
         if (re) redundancy_elimination(instance, sol);
         if (bi) best_improvement(instance, &sol);
         else if (fi) first_improvement(instance, &sol);
