@@ -39,3 +39,9 @@ SCP/results/
 
 # added by GitSavvy
 /SCP.xcodeproj/xcuserdata/
+
+# added by GitSavvy
+/SCP/p-matrix.txt
+
+# added by GitSavvy
+*.zip

@@ -16,7 +16,7 @@ struct Solution *initialize(struct Instance *instance) {
     for (i = 0; i < instance->n; i++) {sol->x[i] = 0;}
     sol->y = (int *) mymalloc(instance->m*sizeof(int));
     for (i = 0; i < instance->m; i++) {sol->y[i] = 0;}
-    
+
     sol->col_cover = (int **) mymalloc(instance->m*sizeof(int *));
     for (i=0; i<instance->m; i++) {
         sol->col_cover[i] = (int *) mymalloc(instance->ncol[i]*sizeof(int));
@@ -24,7 +24,7 @@ struct Solution *initialize(struct Instance *instance) {
             sol->col_cover[i][j] = -1;
         }
     }
-    
+
     sol->ncol_cover = (int *) mymalloc(instance->m*sizeof(int));
     for (i = 0; i<instance->m; i++) {sol->ncol_cover[i] = 0;}
     sol->fx = 0;
@@ -39,15 +39,15 @@ struct Solution *copy_solution(struct Instance *instance, struct Solution *sourc
     struct Solution *new_sol = initialize(instance);
     new_sol->used_sets = source->used_sets;
     new_sol->fx = source->fx;
-    
+
     memcpy(new_sol->x, source->x, instance->n * sizeof(int));
     memcpy(new_sol->y, source->y, instance->m * sizeof(int));
-    
+
     for (i=0; i<instance->m; i++) {
         memcpy(new_sol->col_cover[i], source->col_cover[i], source->ncol_cover[i] * sizeof(int));
     }
     memcpy(new_sol->ncol_cover, source->ncol_cover, instance->m * sizeof(int));
-    
+
     return new_sol;
 }
 
@@ -120,10 +120,13 @@ int find_max_weight_set(struct Instance *instance, struct Solution *sol, int ctr
 
 /*** Remove redundant sets from the solution***/
 void redundancy_elimination(struct Instance *instance, struct Solution *sol) {
-    int tried, i, j, max_weight_set, can_remove, covered_by_set;
-    for (tried = 0; tried < instance->n; tried++) {
+    int tried=0, i, j, max_weight_set, can_remove, covered_by_set;
+    int counter = sol->used_sets;
+    while (counter) {
+        counter--;
         tried = find_max_weight_set(instance, sol, tried);
         max_weight_set = instance->sorted_by_weight[tried];
+        tried++;
         can_remove = 1;
         for (i = 0; i < instance->m; i++) {
             covered_by_set = 0;

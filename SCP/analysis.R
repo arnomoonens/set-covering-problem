@@ -63,7 +63,7 @@ for(algo in c("ch1", "ch4")) {
             colnames(result) <- c("Instance", "Cost")
             ex12.results[[config]] <- result
             filtered <- bestknown[bestknown$Instance %in% result$Instance,] #Remove results from best known that don't appear in experiment results
-            cat("File: ", filename, "; Average deviation: ", mean(solutionquality(filtered, result)), "\n", sep="")
+            cat("File: ", filename, "; Average deviation: ", mean(solutionquality(result, filtered)), "\n", sep="")
             result.noimp <- read.table(paste0(results.folder, filename.noimp), header = FALSE, sep = " ")
             colnames(result.noimp) <- c("Instance", "Cost")
             ex12.results[[config.noimp]] <- result.noimp
