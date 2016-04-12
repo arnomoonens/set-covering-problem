@@ -126,6 +126,7 @@ void redundancy_elimination(struct Instance *instance, struct Solution *sol) {
         counter--;
         tried = find_max_weight_set(instance, sol, tried);
         max_weight_set = instance->sorted_by_weight[tried];
+        tried++;
         can_remove = 1;
         for (i = 0; i < instance->m; i++) {
             covered_by_set = 0;

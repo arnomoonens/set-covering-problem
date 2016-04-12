@@ -167,11 +167,8 @@ int main(int argc, char *argv[]) {
         instance->sorted_by_weight = (int *) mymalloc(instance->n*sizeof(int));
         for (i = 0; i < instance->n; i++) instance->sorted_by_weight[i] = i;
         qsort(instance->sorted_by_weight, instance->n, sizeof(int), compare_cost);
-        // Apply reduncancy elimination and/or best improvement or first improvement
-        if (re) redundancy_elimination(instance, sol);
-        if (bi) best_improvement(instance, &sol);
-        else if (fi) first_improvement(instance, &sol);
-        free((void *) instance->sorted_by_weight);
+        double maxtime = 120;
+        sol = aco_execute(instance, maxtime, 20, 5.0, 0.99, 0.005);
     }
     printf("%i", sol->fx);
     finalize(sol);
