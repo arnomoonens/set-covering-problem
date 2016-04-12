@@ -139,8 +139,15 @@ int compare_cost(const void * a, const void * b)
 }
 
 
-int main(int argc, char *argv[]) {
+void sort_sets_descending() {
     int i;
+    instance->sorted_by_weight = (int *) mymalloc(instance->n*sizeof(int));
+    for (i = 0; i < instance->n; i++) instance->sorted_by_weight[i] = i;
+    qsort(instance->sorted_by_weight, instance->n, sizeof(int), compare_cost);
+    return;
+}
+
+int main(int argc, char *argv[]) {
     struct Solution *sol;
     read_parameters(argc, argv);
     srand(seed); /*set seed */
@@ -150,10 +157,7 @@ int main(int argc, char *argv[]) {
         sol = initialize(instance);
         execute(instance, sol, ch, -1); // index of set to exclude is set to -1: don't exclude a set from possible being used
         if (re || bi || fi) {
-            // Sort sets using cost from high to low
-            instance->sorted_by_weight = (int *) mymalloc(instance->n*sizeof(int));
-            for (i = 0; i < instance->n; i++) instance->sorted_by_weight[i] = i;
-            qsort(instance->sorted_by_weight, instance->n, sizeof(int), compare_cost);
+            sort_sets_descending();
             if (re) redundancy_elimination(instance, sol);
             if (bi) best_improvement(instance, &sol);
             else if (fi) first_improvement(instance, &sol);
@@ -161,12 +165,13 @@ int main(int argc, char *argv[]) {
         }
     } else if (ils) {
         sol = initialize(instance);
-        double maxtime, T, TL, CF, ro1, ro2;
+        sort_sets_descending();
+        execute(instance, sol, 4, -1); //Construct an initial solution using CH4
+        // Use PS3 settings from paper
+        double maxtime = 240, T = 1.3, TL = 100, CF = 0.9, ro1 = 0.4, ro2 = 1.1;
         ils_execute(instance, &sol, maxtime, T, TL, CF, ro1, ro2);
     } else {
-        instance->sorted_by_weight = (int *) mymalloc(instance->n*sizeof(int));
-        for (i = 0; i < instance->n; i++) instance->sorted_by_weight[i] = i;
-        qsort(instance->sorted_by_weight, instance->n, sizeof(int), compare_cost);
+        sort_sets_descending();
         double maxtime = 120;
         sol = aco_execute(instance, maxtime, 20, 5.0, 0.99, 0.005);
     }

@@ -39,7 +39,7 @@ struct Solution *copy_solution(struct Instance *instance, struct Solution *sourc
     struct Solution *new_sol = initialize(instance);
     new_sol->used_sets = source->used_sets;
     new_sol->fx = source->fx;
-
+    
     memcpy(new_sol->x, source->x, instance->n * sizeof(int));
     memcpy(new_sol->y, source->y, instance->m * sizeof(int));
 
@@ -118,7 +118,7 @@ int find_max_weight_set(struct Instance *instance, struct Solution *sol, int ctr
 }
 
 
-/*** Remove redundant sets from the solution***/
+/*** Remove redundant sets from the solution ***/
 void redundancy_elimination(struct Instance *instance, struct Solution *sol) {
     int tried=0, i, j, max_weight_set, can_remove, covered_by_set;
     int counter = sol->used_sets;

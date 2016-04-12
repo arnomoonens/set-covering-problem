@@ -18,7 +18,7 @@ extern double heuristic_information(struct Instance *instance, struct Solution *
     Select a column j that covers i according to the probab. distribution p(j)=(tau*n)/sum_columnscoveringi(tau*n)
 
 **/
-void aco_construct(struct Instance *instance, struct Solution *sol, double *pheromones_trails, double *heuristic_factor) {
+void aco_construct(struct Instance *instance, struct Solution *sol, double *pheromones_trails, double *heuristic_factor, double beta) {
     int i, found_element, chosen_element, chosen_set;
     double denominator;
     double *pdf = (double *) mymalloc(instance->n * sizeof(double));
@@ -31,12 +31,12 @@ void aco_construct(struct Instance *instance, struct Solution *sol, double *pher
         }
         denominator = 0;
         for(i = 0; i < instance->ncol[chosen_element]; i++) { // Calculate denominator (used in pdf)
-            denominator += pheromones_trails[instance->col[chosen_element][i]]*heuristic_information(instance, sol, instance->col[chosen_element][i]); //TODO: exponentiate heuristic factor by beta (and pher. by alfa?)
+            denominator += pheromones_trails[instance->col[chosen_element][i]]*pow(heuristic_information(instance, sol, instance->col[chosen_element][i]), beta);
         }
         for(i = 0; i < instance->n; i++) { // Calculate pdf itself
             if (set_covers_element(instance, i, chosen_element)) {
-                pdf[i] = pheromones_trails[i]*heuristic_information(instance, sol,i) / denominator;
-            } else {
+                pdf[i] = pheromones_trails[i]*pow(heuristic_information(instance, sol,i), beta) / denominator;
+            } else { //TODO: Also do this if set is already in solution?
                 pdf[i] = 0;
             }
         }
@@ -166,7 +166,7 @@ struct Solution * aco_execute(struct Instance *instance, double maxtime, int nan
         printf("\r%f / %f", difftime(time(0), starttime), maxtime);
         for (i = 0; i < nants; i++) { // For each ant...
             ants[i] = initialize(instance);
-            aco_construct(instance, ants[i], pheromones_trails, heuristic_factor); // Construct a solution...
+            aco_construct(instance, ants[i], pheromones_trails, heuristic_factor, beta); // Construct a solution...
             aco_local_search(instance, ants[i]); /// And apply local search
         }
         improved = 0;

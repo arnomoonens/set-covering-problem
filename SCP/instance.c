@@ -91,7 +91,6 @@ void print_instance(struct Instance *instance, int level, char *scp_file) {
     
 }
 
-
 int set_covers_element(struct Instance *instance, int set, int element) {
     int i;
     for (i = 0; i < instance->ncol[element]; i++) {
