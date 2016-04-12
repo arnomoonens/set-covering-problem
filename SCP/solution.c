@@ -126,7 +126,6 @@ void redundancy_elimination(struct Instance *instance, struct Solution *sol) {
         counter--;
         tried = find_max_weight_set(instance, sol, tried);
         max_weight_set = instance->sorted_by_weight[tried];
-        tried++;
         can_remove = 1;
         for (i = 0; i < instance->m; i++) {
             covered_by_set = 0;
@@ -146,6 +145,32 @@ void redundancy_elimination(struct Instance *instance, struct Solution *sol) {
         }
     }
     return;
+}
+
+/** Return maximum cost of sets in a solution **/
+int max_cost(struct Instance *instance, struct Solution *sol) {
+    int i;
+    int max = 0;
+    for (i = 0; i<instance->n; i++) {
+        if (sol->x[i] && instance->cost[i] > max) {
+            max = instance->cost[i];
+        }
+    }
+    return max;
+}
+
+/** Set with lowest cost that covers an element **/
+int lowest_covering_set(struct Instance *instance, struct Solution *sol, int element) {
+    int i = 0, lowest = 0, lowest_c = -1, set, c;
+    for (; i < sol->ncol_cover[element]; i++) {
+        set = sol->col_cover[element][i];
+        c = instance->cost[set];
+        if (lowest_c < 0 || c < lowest_c) {
+            lowest = set;
+            lowest_c = c;
+        }
+    }
+    return lowest;
 }
 
 /** Free all memory of a solution **/

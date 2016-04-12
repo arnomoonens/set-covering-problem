@@ -90,3 +90,14 @@ void print_instance(struct Instance *instance, int level, char *scp_file) {
     printf("**********************************************\n\n");
     
 }
+
+
+int set_covers_element(struct Instance *instance, int set, int element) {
+    int i;
+    for (i = 0; i < instance->ncol[element]; i++) {
+        if (instance->col[element][i] == set) {
+            return 1;
+        }
+    }
+    return 0;
+}
