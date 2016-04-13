@@ -45,3 +45,6 @@ SCP/results/
 
 # added by GitSavvy
 *.zip
+
+# added by GitSavvy
+/SCP/maxtimes.txt

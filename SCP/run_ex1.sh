@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $1 is path of scp executable
+# $1 is path of lsscp executable
 # $2 is path of folder with instances
 # $3 is path of folder to save results
 
