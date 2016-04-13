@@ -56,19 +56,19 @@ void ils_search(struct Instance *instance, struct Solution *sol, double ro1, dou
     int i, set;
     double D = ceil(((double) sol->used_sets) * ro1); //number of sets to remove
     double E = ceil(((double) max_cost(instance, sol)) * ro2); //maximum cost of candidate sets for rebuilding solution
+    int *candidate_sets = (int *) mymalloc(instance->n*sizeof(int));
+    float *alfa = (float *) mymalloc(instance->n*sizeof(float));
     for (i = 0; i < D; i++) { //Randomly remove D sets
         set = -1;
-        while (!sol->x[set]) {
+        while (set < 0 || !sol->x[set]) {
             set = rand() % instance->n;
         }
         remove_set(instance, sol, set);
     }
     while (uncovered_elements(instance, sol)) { //Rebuild solution
-        int *candidate_sets = (int *) mymalloc(instance->n*sizeof(int));
         for (i = 0; i < instance->n; i++) {
             candidate_sets[i] = !sol->x[i] && instance->cost[i] <= E; //A set is still a candidate if it's unused and its cost <= E
         }
-        float *alfa = (float *) mymalloc(instance->n*sizeof(float));
         float min_alfa = -1;
         for (i = 0; i < instance->n; i++) {
             if (candidate_sets[i]) {
@@ -86,34 +86,53 @@ void ils_search(struct Instance *instance, struct Solution *sol, double ro1, dou
         int chosen_set = -1;
         while (chosen_set < 0 || !candidate_sets[chosen_set]) { //Randomly choose out of the candidate sets
             chosen_set = rand() % instance->n;
-            add_set(instance, sol, chosen_set);
         }
+        add_set(instance, sol, chosen_set);
     }
-    redundancy_elimination(instance, sol); //add after refactoring
+    free((void *) candidate_sets);
+    free((void *) alfa);
+    redundancy_elimination(instance, sol);
+    return;
 }
 
 
 void ils_execute(struct Instance *instance, struct Solution **sol, double maxtime, double T, double TL, double CF, double ro1, double ro2) {
-    int i;
+    int i, delta;
     time_t starttime = time(0);
-    struct Solution **overall_best = sol;
+    struct Solution **overall_best = (struct Solution **) mymalloc(sizeof(struct Solution *));
+    struct Solution *new_sol;
+    struct Solution *current_best = *sol;
+    *overall_best = current_best;
     while(difftime(time(0), starttime) < maxtime) {
-        struct Solution *current_best = copy_solution(instance, *sol);
+        printf("\r%f / %f", difftime(time(0), starttime), maxtime);
         for (i = 0; i < TL; i++) {
-            struct Solution *new_sol = copy_solution(instance, current_best);
+            new_sol = copy_solution(instance, current_best);
             ils_search(instance, new_sol, ro1, ro2);
-            int delta = new_sol->fx - current_best->fx;
-            if (delta <= 0) {
-                free_solution(*overall_best);
-                free_solution(current_best);
-                overall_best = &new_sol;
+            delta = new_sol->fx - current_best->fx;
+            if (delta <= 0) { // New solution is better or equal: always keep it as the current and overall best
+                if (current_best != *overall_best) {
+//                    printf("Freeing current_best\n");
+                    free_solution(instance, current_best);
+                }
                 current_best = new_sol;
-            } else if (random_with_probability(exp(((double) delta)/T))) {
-                free_solution(current_best);
+                if (new_sol->fx < (*overall_best)->fx) { // Deviation from paper: only update overall best if it improves, instead of when current_best improves
+                    free_solution(instance, *overall_best);
+                    *overall_best = new_sol;
+                }
+            } else if (random_with_probability(exp(((double) delta)/T))) { //New solution is worse, keep it as the current 'best' with a probability
+                if (current_best != *overall_best) {
+                    free_solution(instance, current_best);
+                }
                 current_best = new_sol;
+            } else {
+                free_solution(instance, new_sol);
             }
         }
         T = T*CF;
+        printf(" %i", (*overall_best)->fx);
+        fflush(stdout);
     }
+    *sol = *overall_best;
+    free((void **) overall_best);
     return;
 }
