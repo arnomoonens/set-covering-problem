@@ -174,6 +174,16 @@ int lowest_covering_set(struct Instance *instance, struct Solution *sol, int ele
     return lowest;
 }
 
+/** Add every set for which an element is only covered by that set **/
+void column_inclusion(struct Instance *instance,  struct Solution *sol) {
+    int i;
+    for (i = 0; i<instance->m; i++) {
+        if (instance->ncol[i] == 1) add_set(instance, sol, instance->col[i][0]);
+    }
+    return;
+}
+
+
 /** Free all memory of a solution **/
 void free_solution(struct Solution *sol) {
     free((void *) sol->x);

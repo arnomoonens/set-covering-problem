@@ -18,7 +18,7 @@ extern double heuristic_information(struct Instance *instance, struct Solution *
     Select a column j that covers i according to the probab. distribution p(j)=(tau*n)/sum_columnscoveringi(tau*n)
 
 **/
-void aco_construct(struct Instance *instance, struct Solution *sol, double *pheromones_trails, double *heuristic_factor, double beta) {
+void aco_construct(struct Instance *instance, struct Solution *sol, double *pheromones_trails, double beta) {
     int i, found_element, chosen_element, chosen_set;
     double denominator;
     double *pdf = (double *) mymalloc(instance->n * sizeof(double));
@@ -140,6 +140,7 @@ void aco_local_search(struct Instance *instance, struct Solution *sol) {
 }
 
 /** Total framework
+ 0. Apply column domination stuff
  1. Get a Lagrangian multiplier vector with subgradient method OR use simpler method of calculating heuristic information
  2. Initialize pheromone trails and related parameters
  3. while termination condition is not met:
@@ -161,12 +162,12 @@ struct Solution * aco_execute(struct Instance *instance, double maxtime, int nan
     tau_min = epsilon * tau_max;
     double *pheromones_trails = mymalloc(instance->n * sizeof(double));
     for (i = 0; i < instance->n; i++) pheromones_trails[i] = tau_max; // Set initial pheromone trails to tau_max
-    double *heuristic_factor = mymalloc(instance->n * sizeof(double)); // TODO: should be specified
     while(difftime(time(0), starttime) < maxtime) {
         printf("\r%f / %f", difftime(time(0), starttime), maxtime);
         for (i = 0; i < nants; i++) { // For each ant...
             ants[i] = initialize(instance);
-            aco_construct(instance, ants[i], pheromones_trails, heuristic_factor, beta); // Construct a solution...
+            column_inclusion(instance, ants[i]); // Add sets that always need to be included (see explanation above function)
+            aco_construct(instance, ants[i], pheromones_trails, beta); // Construct a solution...
             aco_local_search(instance, ants[i]); /// And apply local search
         }
         improved = 0;
@@ -190,6 +191,8 @@ struct Solution * aco_execute(struct Instance *instance, double maxtime, int nan
         fflush(stdout);
         update_pheromone_trails(instance, global_best, pheromones_trails, ro, tau_min, tau_max);
     }
-    //TODO: free all arrays and unused solutions
+    //free all arrays
+    free((void *) pheromones_trails);
+    free((void *) ants);
     return global_best;
 }
