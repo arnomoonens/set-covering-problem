@@ -123,13 +123,20 @@ void read_parameters(int argc, char *argv[]) {
 
 /*** Finalize execution by freeing variables */
 void finalize(struct Solution *sol){
+    int i;
+    free_solution(instance, sol);
+    for (i = 0; i < instance->n; i++) {
+        free((void *)instance->row[i]);
+    }
     free((void **) instance->row );
+    for (i = 0; i < instance->m; i++) {
+        free((void *)instance->col[i]);
+    }
     free((void **) instance->col );
     free((void *) instance->nrow );
     free((void *) instance->ncol );
     free((void *) instance->cost );
     free((void *) instance);
-    free_solution(sol);
 }
 
 /** Compare the cost of 2 solutions **/

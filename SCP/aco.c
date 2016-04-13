@@ -177,10 +177,10 @@ struct Solution * aco_execute(struct Instance *instance, double maxtime, int nan
                 global_best = ants[i];
             } else if (ants[i]->fx <= global_best->fx) {
                 improved = 1;
-                free_solution(global_best);
+                free_solution(instance, global_best);
                 global_best = ants[i];
             } else {
-                free_solution(ants[i]);
+                free_solution(instance, ants[i]);
             }
         }
         if (improved) {

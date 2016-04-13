@@ -185,9 +185,13 @@ void column_inclusion(struct Instance *instance,  struct Solution *sol) {
 
 
 /** Free all memory of a solution **/
-void free_solution(struct Solution *sol) {
+void free_solution(struct Instance *instance, struct Solution *sol) {
+    int i;
     free((void *) sol->x);
     free((void *) sol->y);
+    for (i = 0; i < instance->m; i++) {
+        free((void *) sol->col_cover[i]);
+    }
     free((void **) sol->col_cover);
     free((void *) sol->ncol_cover);
     free((void *) sol);

@@ -35,12 +35,12 @@ void best_improvement(struct Instance *instance, struct Solution **sol) {
             execute(instance, new_sol, 4, max_weight_set); //And build up the solution again with CH4, without using the removed set
             if(new_sol->fx < current_best->fx) { //if move is new best improvement
                 improvement = 1;
-                free_solution(current_best);
+                free_solution(instance, current_best);
                 current_best = new_sol; //memorize move
             }
         }
         if (improvement) {
-            free_solution(*best_solution);
+            free_solution(instance, *best_solution);
             *best_solution = current_best; //apply best move
             redundancy_elimination(instance, *best_solution);
         }
@@ -67,7 +67,7 @@ void first_improvement(struct Instance *instance, struct Solution **sol) {
             execute(instance, new_sol, 4, max_weight_set);
             if(new_sol->fx < (*best_solution)->fx) { //move improves
                 improvement = 1;
-                free_solution(*best_solution);
+                free_solution(instance, *best_solution);
                 *best_solution = new_sol; //apply move
                 redundancy_elimination(instance, *best_solution);
                 break;

@@ -44,6 +44,6 @@ void redundancy_elimination(struct Instance *instance, struct Solution *sol);
 int max_cost(struct Instance *instance, struct Solution *sol);
 void column_inclusion(struct Instance *instance,  struct Solution *sol);
 int lowest_covering_set(struct Instance *instance, struct Solution *sol, int element);
-void free_solution(struct Solution *sol);
+void free_solution(struct Instance *instance, struct Solution *sol);
 
 #endif /* solution_h */
