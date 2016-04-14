@@ -7,7 +7,7 @@
 
 seed=20
 
-echo "" > "$3" # Create/overwrite results file
+printf "" > "$3" # Create/overwrite results file
 for instance in "$2"/* # Loop over every instance file in the instances folder
 do
     times=()

@@ -55,7 +55,7 @@ void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, 
             = 0, otherwise
  if Tau_j < Tau_min, then Tau_j = Tau_min
  if Tau_j > Tau_max, then Tau_j = Tau_max
- 
+
  0 <= ro < 1: pheromone persistence
  Tau_max is an estimate of the asymptotically maximum value of pheromone trails, i.e Tau_max = 1/(1-ro)(sum(c_j for each j in S_gb)
  Each time a new best solution is found, Tau_max is updated
@@ -163,7 +163,7 @@ solution * aco_execute(instance *inst, double maxtime, int nants, double beta, d
     double *pheromones_trails = mymalloc(inst->n * sizeof(double));
     for (i = 0; i < inst->n; i++) pheromones_trails[i] = tau_max; // Set initial pheromone trails to tau_max
     while(difftime(time(0), starttime) < maxtime) {
-        printf("\r%f / %f", difftime(time(0), starttime), maxtime);
+//        printf("\r%f / %f", difftime(time(0), starttime), maxtime);
         for (i = 0; i < nants; i++) { // For each ant...
             ants[i] = initialize(inst);
             column_inclusion(inst, ants[i]); // Add sets that always need to be included (see explanation above function)
@@ -187,8 +187,8 @@ solution * aco_execute(instance *inst, double maxtime, int nants, double beta, d
             tau_max = (double) 1 / ((double) 1 - ro) * (double) global_best->fx;
             tau_min = epsilon * tau_max;
         }
-        printf(" %i", global_best->fx);
-        fflush(stdout);
+//        printf(" %i", global_best->fx);
+//        fflush(stdout);
         update_pheromone_trails(inst, global_best, pheromones_trails, ro, tau_min, tau_max);
     }
     //free all arrays

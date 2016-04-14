@@ -32,6 +32,7 @@ char *scp_file="";
 
 /** Variables to activate algorithms **/
 int ch=0, bi=0, fi=0, re=0, ils=0, aco=0;
+double mt;
 
 
 instance *inst;
@@ -50,8 +51,9 @@ void usage(){
     printf("  --re: applies redundancy elimination after construction.\n");
     printf("  --bi: best improvement.\n");
     printf("  --fi: first improvement.\n");
-    printf("  --ils: iterated local search");
-    printf("  --aco: ant colony optimization");
+    printf("  --ils: iterated local search.\n");
+    printf("  --aco: ant colony optimization.\n");
+    printf("  --mt: maximum time to run --ils or --aco.\n");
     printf("\n");
 }
 
@@ -89,19 +91,22 @@ void read_parameters(int argc, char *argv[]) {
             ils=1;
         } else if (strcmp(argv[i], "--aco") == 0) {
             aco=1;
+        } else if (strcmp(argv[i], "--mt") == 0) {
+            sscanf(argv[i+1], "%lf", &mt);
+            i++;
         } else {
             printf("\nERROR: parameter %s not recognized.\n",argv[i]);
             usage();
             exit( EXIT_FAILURE );
         }
     }
-    
+
     if( (scp_file == NULL) || ((scp_file != NULL) && (scp_file[0] == '\0'))){
         printf("Error: --instance must be provided.\n");
         usage();
         exit( EXIT_FAILURE );
     }
-    
+
     if (ch == 0 && !ils && !aco) {
         printf("Error: exactly one of --ch1, --ch2, --ch3, --ch4, --ils and --aco needs to be provided.\n");
         usage();
@@ -117,7 +122,13 @@ void read_parameters(int argc, char *argv[]) {
         usage();
         exit( EXIT_FAILURE );
     }
-    
+
+    if ((ils || aco) && mt <= 0 ) {
+        printf("Error: When using --ils or --aco, an --mt of greater than 0 must be provided.\n");
+        usage();
+        exit(EXIT_FAILURE);
+    }
+
 }
 
 
@@ -175,12 +186,11 @@ int main(int argc, char *argv[]) {
         sort_sets_descending();
         execute(inst, sol, 4, -1); //Construct an initial solution using CH4
         // Use PS3 settings from paper
-        double maxtime = 120, T = 1.3, TL = 100, CF = 0.9, ro1 = 0.4, ro2 = 1.1;
-        ils_execute(inst, &sol, maxtime, T, TL, CF, ro1, ro2);
+        double T = 1.3, TL = 100, CF = 0.9, ro1 = 0.4, ro2 = 1.1;
+        ils_execute(inst, &sol, mt, T, TL, CF, ro1, ro2);
     } else {
         sort_sets_descending();
-        double maxtime = 120;
-        sol = aco_execute(inst, maxtime, 20, 5.0, 0.99, 0.005);
+        sol = aco_execute(inst, mt, 20, 5.0, 0.99, 0.005);
     }
     printf("%i", sol->fx);
     finalize(sol);

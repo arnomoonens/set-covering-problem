@@ -9,12 +9,12 @@
 #include "ils.h"
 
 /** How it works:
- 
+
  MT = maximum CPU time;
  T = initial temperature, a parameter which controls the probability of accepting an inferior solution;
  TL = temperature length, the number of iterations at a particular value of T;
  CF= coolingfactor; the percentage by which T is reduced after TL iterations;
- 
+
  CONSTRUCT a feasible solution S with cost Z(S)
  set T, TL, and CF
  set the maximum run time, MT
@@ -35,8 +35,8 @@
  continue
  return the minimum cost solution S* and Z (S*)
  end
- 
- 
+
+
  SEARCH:
  0. Set d=0,D=ceiling(ro1*N(S)),and E=ceiling(ro2*Q(S))
  1. Randomly select a set k, with k element of the solution.
@@ -104,7 +104,7 @@ void ils_execute(instance *inst, solution **sol, double maxtime, double T, doubl
     solution *current_best = *sol;
     *overall_best = current_best;
     while(difftime(time(0), starttime) < maxtime) {
-        printf("\r%f / %f", difftime(time(0), starttime), maxtime);
+//        printf("\r%f / %f", difftime(time(0), starttime), maxtime);
         for (i = 0; i < TL; i++) {
             new_sol = copy_solution(inst, current_best);
             ils_search(inst, new_sol, ro1, ro2);
@@ -129,8 +129,8 @@ void ils_execute(instance *inst, solution **sol, double maxtime, double T, doubl
             }
         }
         T = T*CF;
-        printf(" %i", (*overall_best)->fx);
-        fflush(stdout);
+//        printf(" %i", (*overall_best)->fx);
+//        fflush(stdout);
     }
     *sol = *overall_best;
     free((void **) overall_best);
