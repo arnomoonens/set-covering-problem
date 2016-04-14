@@ -17,7 +17,7 @@
 #include "solution.h"
 #include "complete.h"
 
-void best_improvement(struct Instance *instance, struct Solution **sol);
-void first_improvement(struct Instance *instance, struct Solution **sol);
+void best_improvement(instance *inst, solution **sol);
+void first_improvement(instance *inst, solution **sol);
 
 #endif /* improvement_h */

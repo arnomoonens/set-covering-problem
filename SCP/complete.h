@@ -16,6 +16,6 @@
 #include "instance.h"
 #include "solution.h"
 
-void execute(struct Instance *instance, struct Solution *sol, int ch, int exclude_set);
+void execute(instance *inst, solution *sol, int ch, int exclude_set);
 
 #endif /* complete_h */

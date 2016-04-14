@@ -34,7 +34,7 @@ char *scp_file="";
 int ch=0, bi=0, fi=0, re=0, ils=0, aco=0;
 
 
-struct Instance *instance;
+instance *inst;
 
 /** Print arguments that can be used when calling the program **/
 void usage(){
@@ -122,65 +122,65 @@ void read_parameters(int argc, char *argv[]) {
 
 
 /*** Finalize execution by freeing variables */
-void finalize(struct Solution *sol){
+void finalize(solution *sol){
     int i;
-    free_solution(instance, sol);
-    for (i = 0; i < instance->n; i++) {
-        free((void *)instance->row[i]);
+    free_solution(inst, sol);
+    for (i = 0; i < inst->n; i++) {
+        free((void *)inst->row[i]);
     }
-    free((void **) instance->row );
-    for (i = 0; i < instance->m; i++) {
-        free((void *)instance->col[i]);
+    free((void **) inst->row );
+    for (i = 0; i < inst->m; i++) {
+        free((void *)inst->col[i]);
     }
-    free((void **) instance->col );
-    free((void *) instance->nrow );
-    free((void *) instance->ncol );
-    free((void *) instance->cost );
-    free((void *) instance);
+    free((void **) inst->col );
+    free((void *) inst->nrow );
+    free((void *) inst->ncol );
+    free((void *) inst->cost );
+    free((void *) inst);
 }
 
 /** Compare the cost of 2 solutions **/
 int compare_cost(const void * a, const void * b)
 {
-    return ( instance->cost[*(int*)b] - instance->cost[*(int*)a] ); //cost of b - cost of a: sort from high to low cost
+    return ( inst->cost[*(int*)b] - inst->cost[*(int*)a] ); //cost of b - cost of a: sort from high to low cost
 }
 
 
 void sort_sets_descending() {
     int i;
-    instance->sorted_by_weight = (int *) mymalloc(instance->n*sizeof(int));
-    for (i = 0; i < instance->n; i++) instance->sorted_by_weight[i] = i;
-    qsort(instance->sorted_by_weight, instance->n, sizeof(int), compare_cost);
+    inst->sorted_by_weight = (int *) mymalloc(inst->n*sizeof(int));
+    for (i = 0; i < inst->n; i++) inst->sorted_by_weight[i] = i;
+    qsort(inst->sorted_by_weight, inst->n, sizeof(int), compare_cost);
     return;
 }
 
 int main(int argc, char *argv[]) {
-    struct Solution *sol;
+    solution *sol;
     read_parameters(argc, argv);
     srand(seed); /*set seed */
-    instance = read_scp(scp_file);
+    inst = read_scp(scp_file);
     //print_instance(0);
     if (ch) {
-        sol = initialize(instance);
-        execute(instance, sol, ch, -1); // index of set to exclude is set to -1: don't exclude a set from possible being used
+        sol = initialize(inst);
+        execute(inst, sol, ch, -1); // index of set to exclude is set to -1: don't exclude a set from possible being used
         if (re || bi || fi) {
             sort_sets_descending();
-            if (re) redundancy_elimination(instance, sol);
-            if (bi) best_improvement(instance, &sol);
-            else if (fi) first_improvement(instance, &sol);
-            free((void *) instance->sorted_by_weight);
+            if (re) redundancy_elimination(inst, sol);
+            if (bi) best_improvement(inst, &sol);
+            else if (fi) first_improvement(inst, &sol);
+            free((void *) inst->sorted_by_weight);
         }
     } else if (ils) {
-        sol = initialize(instance);
+        sol = initialize(inst);
         sort_sets_descending();
-        execute(instance, sol, 4, -1); //Construct an initial solution using CH4
+        execute(inst, sol, 4, -1); //Construct an initial solution using CH4
         // Use PS3 settings from paper
-        double maxtime = 240, T = 1.3, TL = 100, CF = 0.9, ro1 = 0.4, ro2 = 1.1;
-        ils_execute(instance, &sol, maxtime, T, TL, CF, ro1, ro2);
+        double maxtime = 120, T = 1.3, TL = 100, CF = 0.9, ro1 = 0.4, ro2 = 1.1;
+        ils_execute(inst, &sol, maxtime, T, TL, CF, ro1, ro2);
     } else {
         sort_sets_descending();
         double maxtime = 120;
-        sol = aco_execute(instance, maxtime, 20, 5.0, 0.99, 0.005);
+        sol = aco_execute(inst, maxtime, 20, 5.0, 0.99, 0.005);
     }
     printf("%i", sol->fx);
     finalize(sol);

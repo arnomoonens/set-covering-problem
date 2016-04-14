@@ -16,6 +16,7 @@
 #include "utils.h"
 
 /** Instance static variables **/
+typedef struct Instance instance;
 struct Instance {
     int m;            /* number of rows = elements */
     int n;            /* number of columns = sets */
@@ -27,8 +28,8 @@ struct Instance {
     int *sorted_by_weight; /* sets sorted by weight (in descending order) */
 };
 
-struct Instance * read_scp(char *filename);
-void print_instance(struct Instance *instance, int level, char *scp_file);
-int set_covers_element(struct Instance *instance, int set, int element);
+instance *read_scp(char *filename);
+void print_instance(instance *inst, int level, char *scp_file);
+int set_covers_element(instance *inst, int set, int element);
 
 #endif /* instance_h */

@@ -17,6 +17,7 @@
 #include "instance.h"
 
 /** Holds all solution information **/
+typedef struct Solution solution;
 struct Solution {
     int *x;           /* x[i] 0,1 if column (= set) i is selected */
     int *y;           /* y[i] 0,1 if row (=element) i covered by the actual solution */
@@ -33,17 +34,17 @@ struct Solution {
     int *ncol_cover;   /* number of selected columns that cover row i */
 };
 
-struct Solution *initialize(struct Instance *instance);
-struct Solution *copy_solution(struct Instance *instance, struct Solution *source);
-void add_set(struct Instance *instance, struct Solution *sol, int set);
-void remove_set(struct Instance *instance, struct Solution *sol, int set);
-int uncovered_elements(struct Instance *instance, struct Solution *sol);
-int added_elements(struct Instance *instance, struct Solution *sol, int set);
-int find_max_weight_set(struct Instance *instance, struct Solution *sol, int ctr);
-void redundancy_elimination(struct Instance *instance, struct Solution *sol);
-int max_cost(struct Instance *instance, struct Solution *sol);
-void column_inclusion(struct Instance *instance,  struct Solution *sol);
-int lowest_covering_set(struct Instance *instance, struct Solution *sol, int element);
-void free_solution(struct Instance *instance, struct Solution *sol);
+solution *initialize(instance *inst);
+solution *copy_solution(instance *inst, solution *source);
+void add_set(instance *inst, solution *sol, int set);
+void remove_set(instance *inst, solution *sol, int set);
+int uncovered_elements(instance *inst, solution *sol);
+int added_elements(instance *inst, solution *sol, int set);
+int find_max_weight_set(instance *inst, solution *sol, int ctr);
+void redundancy_elimination(instance *inst, solution *sol);
+int max_cost(instance *inst, solution *sol);
+void column_inclusion(instance *inst,  solution *sol);
+int lowest_covering_set(instance *inst, solution *sol, int element);
+void free_solution(instance *inst, solution *sol);
 
 #endif /* solution_h */

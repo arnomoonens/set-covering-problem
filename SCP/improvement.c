@@ -15,61 +15,61 @@
  - Calculate and save cost
  - keep solution with lowest cost
  **/
-void best_improvement(struct Instance *instance, struct Solution **sol) {
+void best_improvement(struct Instance *inst, solution **sol) {
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
-    struct Solution ** best_solution = sol;
+    solution ** best_solution = sol;
     while (improvement) {
         tried = 0;
         improvement = 0;
         int counter = (*best_solution)->used_sets;
-        struct Solution *current_best = copy_solution(instance, *best_solution);
+        solution *current_best = copy_solution(inst, *best_solution);
         while (counter) {
             counter--;
-            tried = find_max_weight_set(instance, *best_solution, tried); //get set with highest cost starting from tried'th set
-            max_weight_set = instance->sorted_by_weight[tried];
+            tried = find_max_weight_set(inst, *best_solution, tried); //get set with highest cost starting from tried'th set
+            max_weight_set = inst->sorted_by_weight[tried];
             tried++;
-            struct Solution *new_sol = copy_solution(instance, *best_solution);
-            remove_set(instance, new_sol, max_weight_set); //Remove set from the new solution...
-            execute(instance, new_sol, 4, max_weight_set); //And build up the solution again with CH4, without using the removed set
+            solution *new_sol = copy_solution(inst, *best_solution);
+            remove_set(inst, new_sol, max_weight_set); //Remove set from the new solution...
+            execute(inst, new_sol, 4, max_weight_set); //And build up the solution again with CH4, without using the removed set
             if(new_sol->fx < current_best->fx) { //if move is new best improvement
                 improvement = 1;
-                free_solution(instance, current_best);
+                free_solution(inst, current_best);
                 current_best = new_sol; //memorize move
             }
         }
         if (improvement) {
-            free_solution(instance, *best_solution);
+            free_solution(inst, *best_solution);
             *best_solution = current_best; //apply best move
-            redundancy_elimination(instance, *best_solution);
+            redundancy_elimination(inst, *best_solution);
         }
     }
     return;
 }
 
-void first_improvement(struct Instance *instance, struct Solution **sol) {
+void first_improvement(struct Instance *inst, solution **sol) {
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
-    struct Solution ** best_solution = sol;
+    solution ** best_solution = sol;
     while (improvement) {
         tried = 0;
         improvement = 0;
         int counter = (*best_solution)->used_sets;
         while (counter) {
             counter--;
-            tried = find_max_weight_set(instance, *best_solution, tried); //get set with highest cost starting from tried'th set
-            max_weight_set = instance->sorted_by_weight[tried];
+            tried = find_max_weight_set(inst, *best_solution, tried); //get set with highest cost starting from tried'th set
+            max_weight_set = inst->sorted_by_weight[tried];
             tried++;
-            struct Solution *new_sol = copy_solution(instance, *best_solution);
-            remove_set(instance, new_sol, max_weight_set);
-            execute(instance, new_sol, 4, max_weight_set);
+            solution *new_sol = copy_solution(inst, *best_solution);
+            remove_set(inst, new_sol, max_weight_set);
+            execute(inst, new_sol, 4, max_weight_set);
             if(new_sol->fx < (*best_solution)->fx) { //move improves
                 improvement = 1;
-                free_solution(instance, *best_solution);
+                free_solution(inst, *best_solution);
                 *best_solution = new_sol; //apply move
-                redundancy_elimination(instance, *best_solution);
+                redundancy_elimination(inst, *best_solution);
                 break;
             }
         }

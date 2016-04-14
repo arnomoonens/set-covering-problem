@@ -20,6 +20,10 @@
 #include "instance.h"
 #include "solution.h"
 
-struct Solution * aco_execute(struct Instance *instance, double maxtime, int nants, double beta, double ro, double epsilon);
+// Internally, solutions are named ants (except when returning the final solution/ant)
+typedef solution ant;
+#define free_ant free_solution
+
+solution *aco_execute(instance *inst, double maxtime, int nants, double beta, double ro, double epsilon);
 
 #endif /* aco_h */
