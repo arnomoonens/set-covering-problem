@@ -26,7 +26,7 @@ do
         ((count++))
     done
     #echo "$total $count"
-    maxtime=$(echo "scale=2; $total / $count * 100" | bc) #100*average
+    maxtime=$(echo "scale=4; $total / $count * 100" | bc) #100*average
     y=${instance%.txt} # get part before .txt
     filename=${y##*/} # Only keep filename (remove the path)
     length=${#filename}

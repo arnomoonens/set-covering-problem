@@ -96,14 +96,13 @@ void ils_search(instance *inst, solution *sol, double ro1, double ro2) {
 }
 
 
-void ils_execute(instance *inst, solution **sol, double maxtime, double T, double TL, double CF, double ro1, double ro2) {
+void ils_execute(instance *inst, solution **sol, int (*termination_criterion)(solution *), void (*notify_improvement)(solution *), double T, double TL, double CF, double ro1, double ro2) {
     int i, delta;
-    time_t starttime = time(0);
     solution **overall_best = (solution **) mymalloc(sizeof(solution *));
     solution *new_sol;
     solution *current_best = *sol;
     *overall_best = current_best;
-    while(difftime(time(0), starttime) < maxtime) {
+    while(!termination_criterion(*overall_best)) {
 //        printf("\r%f / %f", difftime(time(0), starttime), maxtime);
         for (i = 0; i < TL; i++) {
             new_sol = copy_solution(inst, current_best);
@@ -116,6 +115,7 @@ void ils_execute(instance *inst, solution **sol, double maxtime, double T, doubl
                 }
                 current_best = new_sol;
                 if (new_sol->fx < (*overall_best)->fx) { // Deviation from paper: only update overall best if it improves, instead of when current_best improves
+                    notify_improvement(new_sol);
                     free_solution(inst, *overall_best);
                     *overall_best = new_sol;
                 }

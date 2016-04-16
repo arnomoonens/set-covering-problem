@@ -34,7 +34,7 @@ void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, 
             denominator += pheromones_trails[inst->col[chosen_element][i]]*pow(heuristic_information(inst, current_ant, inst->col[chosen_element][i]), beta);
         }
         for(i = 0; i < inst->n; i++) { // Calculate pdf itself
-            if (set_covers_element(inst, i, chosen_element)) {
+            if (set_covers_element(inst, i, chosen_element) && !current_ant->x[i]) {
                 pdf[i] = pheromones_trails[i]*pow(heuristic_information(inst, current_ant,i), beta) / denominator;
             } else { //TODO: Also do this if set is already in solution?
                 pdf[i] = 0;
@@ -72,8 +72,11 @@ void update_pheromone_trails(instance *inst, ant *global_best, double *pheromone
             delta_tau = 0;
         }
         pheromone_trails[i] = ro * pheromone_trails[i] + delta_tau;
-        if (pheromone_trails[i] < tau_min) pheromone_trails[i] = tau_min;
-        if (pheromone_trails[i] > tau_max) pheromone_trails[i] = tau_max;
+        if (pheromone_trails[i] < tau_min) {
+            pheromone_trails[i] = tau_min;
+        } else if (pheromone_trails[i] > tau_max) {
+            pheromone_trails[i] = tau_max;
+        }
     }
     return;
 }
@@ -102,12 +105,13 @@ double heuristic_information(instance *inst, ant *current_ant, int set) {
         continue
 **/
 void aco_local_search(instance *inst, ant *current_ant) {
-    int i, set, element, j, lowest1 = 0, lowest2 = 0;
+    int i, set, element, j, lowest1 = 0, lowest2 = 0, nonly_covered_by_i;
+    int *only_covered_by_i;
     for (i = 0; i < inst->n; i++) {
         i = find_max_weight_set(inst, current_ant, i);
         set = inst->sorted_by_weight[i];
-        int nonly_covered_by_i = 0;
-        int *only_covered_by_i = (int *) mymalloc(inst->nrow[set]*sizeof(int));
+        nonly_covered_by_i = 0;
+        only_covered_by_i = (int *) mymalloc(inst->nrow[set]*sizeof(int));
         for (element = 0; element < inst->m; element++) {
             for (j = 0; j < current_ant->ncol_cover[element]; j++) {
                 if (current_ant->col_cover[element][j] == set) {
@@ -151,19 +155,17 @@ void aco_local_search(instance *inst, ant *current_ant) {
 (8.     If the best solution is not improved for p consecutive iterations:)
 (9.         Perform subgradient method and get a new Lagrangian multiplier vector)
 **/
-solution * aco_execute(instance *inst, double maxtime, int nants, double beta, double ro, double epsilon) {
+solution * aco_execute(instance *inst, int (*termination_criterion)(solution *), void (*notify_improvement)(solution *), int nants, double beta, double ro, double epsilon) {
     int i, improved, all_set_costs = 0;
     double tau_min, tau_max;
     ant *global_best = NULL;
     ant **ants = mymalloc(nants * sizeof(ant *));
-    time_t starttime = time(0);
     for (i = 0; i < inst->n; i++) all_set_costs += inst->cost[i];
     tau_max = (double) 1 / ((double) 1 - ro) * (double) all_set_costs; // Is total cost of all sets instead of cost of global best at the start
     tau_min = epsilon * tau_max;
     double *pheromones_trails = mymalloc(inst->n * sizeof(double));
     for (i = 0; i < inst->n; i++) pheromones_trails[i] = tau_max; // Set initial pheromone trails to tau_max
-    while(difftime(time(0), starttime) < maxtime) {
-//        printf("\r%f / %f", difftime(time(0), starttime), maxtime);
+    while(!termination_criterion(global_best)) {
         for (i = 0; i < nants; i++) { // For each ant...
             ants[i] = initialize(inst);
             column_inclusion(inst, ants[i]); // Add sets that always need to be included (see explanation above function)
@@ -176,6 +178,7 @@ solution * aco_execute(instance *inst, double maxtime, int nants, double beta, d
                 improved = 1;
                 global_best = ants[i];
             } else if (ants[i]->fx <= global_best->fx) {
+                if (ants[i]->fx < global_best->fx) notify_improvement(ants[i]);
                 improved = 1;
                 free_ant(inst, global_best);
                 global_best = ants[i];

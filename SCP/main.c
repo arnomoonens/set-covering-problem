@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <sys/time.h>
 
 #include "instance.h"
 #include "solution.h"
@@ -32,7 +33,9 @@ char *scp_file="";
 
 /** Variables to activate algorithms **/
 int ch=0, bi=0, fi=0, re=0, ils=0, aco=0;
-double mt;
+double mt=0, mc=0, co=0;
+struct timeval *start_time = NULL;
+char *trace_file="";
 
 
 instance *inst;
@@ -54,6 +57,8 @@ void usage(){
     printf("  --ils: iterated local search.\n");
     printf("  --aco: ant colony optimization.\n");
     printf("  --mt: maximum time to run --ils or --aco.\n");
+    printf("  --mc: maximum cost of the solution obtained by --ils or --aco.\n");
+    printf("  --co: cut-off time when using --mc.\n");
     printf("\n");
 }
 
@@ -69,10 +74,10 @@ void read_parameters(int argc, char *argv[]) {
     for(i=1;i<argc;i++){
         if (strcmp(argv[i], "--seed") == 0) {
             seed=atoi(argv[i+1]);
-            i+=1;
+            i++;
         } else if (strcmp(argv[i], "--instance") == 0) {
             scp_file=argv[i+1];
-            i+=1;
+            i++;
         } else if (strcmp(argv[i], "--ch1") == 0) {
             ch=1;
         } else if (strcmp(argv[i], "--ch2") == 0) {
@@ -94,6 +99,15 @@ void read_parameters(int argc, char *argv[]) {
         } else if (strcmp(argv[i], "--mt") == 0) {
             sscanf(argv[i+1], "%lf", &mt);
             i++;
+        } else if (strcmp(argv[i], "--mc") == 0) {
+            sscanf(argv[i+1], "%lf", &mc);
+            i++;
+        } else if (strcmp(argv[i], "--co") == 0) {
+            sscanf(argv[i+1], "%lf", &co);
+            i++;
+        } else if (strcmp(argv[i], "--trace") == 0) {
+            trace_file=argv[i+1];
+            i++;
         } else {
             printf("\nERROR: parameter %s not recognized.\n",argv[i]);
             usage();
@@ -113,7 +127,7 @@ void read_parameters(int argc, char *argv[]) {
         exit( EXIT_FAILURE );
     }
     if (bi & fi) { //bitwise and
-        printf("Error: maximallo one of --bi and --fi may be provided.\n");
+        printf("Error: maximally one of --bi and --fi may be provided.\n");
         usage();
         exit( EXIT_FAILURE );
     }
@@ -123,8 +137,14 @@ void read_parameters(int argc, char *argv[]) {
         exit( EXIT_FAILURE );
     }
 
-    if ((ils || aco) && mt <= 0 ) {
-        printf("Error: When using --ils or --aco, an --mt of greater than 0 must be provided.\n");
+    if ((ils || aco) && ((mt <= 0 && mc <= 0) || (mt && mc))) {
+        printf("Error: When using --ils or --aco, an --mt OR --mc of greater than 0 must be provided.\n");
+        usage();
+        exit(EXIT_FAILURE);
+    }
+    
+    if ((mc || co) && !(mc && co)) {
+        printf("Error: --mc and --co must be used together.\n");
         usage();
         exit(EXIT_FAILURE);
     }
@@ -156,7 +176,7 @@ int compare_cost(const void * a, const void * b)
     return ( inst->cost[*(int*)b] - inst->cost[*(int*)a] ); //cost of b - cost of a: sort from high to low cost
 }
 
-
+/** Make an array with the ids of set with decreasing cost **/
 void sort_sets_descending() {
     int i;
     inst->sorted_by_weight = (int *) mymalloc(inst->n*sizeof(int));
@@ -164,6 +184,38 @@ void sort_sets_descending() {
     qsort(inst->sorted_by_weight, inst->n, sizeof(int), compare_cost);
     return;
 }
+
+/** Used by ils and aco to determine when to stop **/
+int termination_criterion(solution *sol) {
+    struct timeval now;
+    if (start_time == NULL) {
+        start_time = (struct timeval *) mymalloc(sizeof(struct timeval));
+        gettimeofday(start_time, NULL);
+    }
+//    if (sol) printf("\r%f / %f %i", difftime(time(0), start_time), mt, sol->fx);
+//    fflush(stdout);
+    gettimeofday(&now, NULL);
+    double time_elapsed = mdifftime(&now, start_time);
+    return (mt && time_elapsed > mt) || (mc && ((sol && sol->fx <= mc) || time_elapsed > co));
+}
+
+/** Callback when better solution is encountered: write time and quality to file **/
+void notify_improvement(solution *sol) {
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    double time_elapsed = mdifftime(&now, start_time);
+    FILE *fp = fopen(trace_file, "a" );
+    if(strlen(trace_file) != 0 && fprintf(fp, "%f, %i\n", time_elapsed, sol->fx) < 0)
+        error_writing_file("ERROR: there was an error writing the trace file.");
+    fclose(fp);
+    return;
+}
+
+
+/** Current idea for implementation of termination criterion:
+ Pass a function as argument that is called to determine when to stop. It can use a struct that keeps track of time/cost/...
+ Bash script then can just see how long it took when a run-time distr is necessary
+**/
 
 int main(int argc, char *argv[]) {
     solution *sol;
@@ -187,10 +239,10 @@ int main(int argc, char *argv[]) {
         execute(inst, sol, 4, -1); //Construct an initial solution using CH4
         // Use PS3 settings from paper
         double T = 1.3, TL = 100, CF = 0.9, ro1 = 0.4, ro2 = 1.1;
-        ils_execute(inst, &sol, mt, T, TL, CF, ro1, ro2);
+        ils_execute(inst, &sol, termination_criterion, notify_improvement, T, TL, CF, ro1, ro2);
     } else {
         sort_sets_descending();
-        sol = aco_execute(inst, mt, 20, 5.0, 0.99, 0.005);
+        sol = aco_execute(inst, termination_criterion, notify_improvement, 20, 5.0, 0.99, 0.005);
     }
     printf("%i", sol->fx);
     finalize(sol);

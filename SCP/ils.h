@@ -16,6 +16,6 @@
 #include "solution.h"
 #include "utils.h"
 
-void ils_execute(instance *inst, solution **sol, double maxtime, double T, double TL, double CF, double ro1, double ro2);
+void ils_execute(instance *inst, solution **sol, int (*termination_criterion)(solution *), void (*notify_improvement)(solution *), double T, double TL, double CF, double ro1, double ro2);
 
 #endif /* ils_h */

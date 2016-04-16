@@ -24,6 +24,6 @@
 typedef solution ant;
 #define free_ant free_solution
 
-solution *aco_execute(instance *inst, double maxtime, int nants, double beta, double ro, double epsilon);
+solution *aco_execute(instance *inst, int (*termination_criterion)(solution *), void (*notify_improvement)(solution *), int nants, double beta, double ro, double epsilon);
 
 #endif /* aco_h */

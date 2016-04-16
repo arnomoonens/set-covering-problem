@@ -16,6 +16,11 @@ void error_reading_file(char *text){
     exit( EXIT_FAILURE );
 }
 
+void error_writing_file(char *text) {
+    printf("%s\n", text);
+    exit( EXIT_FAILURE );
+}
+
 
 //WRITE AS MACRO INSTEAD?
 int random_with_probability(double p) {
@@ -32,6 +37,10 @@ int random_with_pdf(double *probabilities, int n) {
             return i;
         }
     }
-    printf("This should not happen");
-    return i;
+    printf("This should not happen.\n");
+    exit( EXIT_FAILURE );
+}
+
+double mdifftime(struct timeval *end, struct timeval *start) {
+    return (end->tv_sec - start->tv_sec) + (end->tv_usec - start->tv_usec)/(double)1000000;
 }
