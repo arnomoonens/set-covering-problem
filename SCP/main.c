@@ -1,6 +1,6 @@
 /**      Heuristic Optimization     **/
 /**              2016               **/
-/**           Exercise 1            **/
+/**          Arno Moonens           **/
 /**       Set Covering Problem      **/
 /**                                 **/
 /*************************************/
@@ -37,7 +37,6 @@ double mt=0, mc=0, co=0;
 struct timeval *start_time = NULL;
 char *trace_file="";
 
-
 instance *inst;
 
 /** Print arguments that can be used when calling the program **/
@@ -59,10 +58,9 @@ void usage(){
     printf("  --mt: maximum time to run --ils or --aco.\n");
     printf("  --mc: maximum cost of the solution obtained by --ils or --aco.\n");
     printf("  --co: cut-off time when using --mc.\n");
+    printf("  --trace: output time/cost traces on improvement to the given file.\n");
     printf("\n");
 }
-
-
 
 /*Read parameters from command line*/
 void read_parameters(int argc, char *argv[]) {
@@ -212,11 +210,6 @@ void notify_improvement(solution *sol) {
 }
 
 
-/** Current idea for implementation of termination criterion:
- Pass a function as argument that is called to determine when to stop. It can use a struct that keeps track of time/cost/...
- Bash script then can just see how long it took when a run-time distr is necessary
-**/
-
 int main(int argc, char *argv[]) {
     solution *sol;
     read_parameters(argc, argv);
@@ -229,8 +222,8 @@ int main(int argc, char *argv[]) {
         if (re || bi || fi) {
             sort_sets_descending();
             if (re) redundancy_elimination(inst, sol);
-            if (bi) best_improvement(inst, &sol);
-            else if (fi) first_improvement(inst, &sol);
+            if (bi) best_improvement(inst, &sol, notify_improvement);
+            else if (fi) first_improvement(inst, &sol, notify_improvement);
             free((void *) inst->sorted_by_weight);
         }
     } else if (ils) {

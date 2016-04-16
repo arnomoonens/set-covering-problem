@@ -17,7 +17,7 @@
 #include "solution.h"
 #include "complete.h"
 
-void best_improvement(instance *inst, solution **sol);
-void first_improvement(instance *inst, solution **sol);
+void best_improvement(instance *inst, solution **sol, void (*notify_improvement)(solution *));
+void first_improvement(instance *inst, solution **sol, void (*notify_improvement)(solution *));
 
 #endif /* improvement_h */

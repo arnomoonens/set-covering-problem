@@ -15,7 +15,7 @@
  - Calculate and save cost
  - keep solution with lowest cost
  **/
-void best_improvement(struct Instance *inst, solution **sol) {
+void best_improvement(struct Instance *inst, solution **sol, void (*notify_improvement)(solution *)) {
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
@@ -40,6 +40,7 @@ void best_improvement(struct Instance *inst, solution **sol) {
             }
         }
         if (improvement) {
+            notify_improvement(current_best);
             free_solution(inst, *best_solution);
             *best_solution = current_best; //apply best move
             redundancy_elimination(inst, *best_solution);
@@ -48,7 +49,7 @@ void best_improvement(struct Instance *inst, solution **sol) {
     return;
 }
 
-void first_improvement(struct Instance *inst, solution **sol) {
+void first_improvement(struct Instance *inst, solution **sol, void (*notify_improvement)(solution *)) {
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
@@ -66,6 +67,7 @@ void first_improvement(struct Instance *inst, solution **sol) {
             remove_set(inst, new_sol, max_weight_set);
             execute(inst, new_sol, 4, max_weight_set);
             if(new_sol->fx < (*best_solution)->fx) { //move improves
+                notify_improvement(new_sol);
                 improvement = 1;
                 free_solution(inst, *best_solution);
                 *best_solution = new_sol; //apply move

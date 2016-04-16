@@ -13,7 +13,7 @@ algos=(ils aco)
 #Part 1
 echo "Part 1"
 #Clear files of algorithm results
-for algo in $algos
+for algo in "${algos[@]}"
 do
     printf "" > "$5/$algo.txt"
 done
@@ -24,10 +24,10 @@ do
     splitted=($info)
     config=${splitted[0]}
     maxtime=${splitted[1]}
-    for algo in $algos
+    for algo in "${algos[@]}"
     do
         cost=$(eval "$1 --seed $seed --instance $instance --$algo --mt $maxtime")
-        echo $cost
+        echo "$algo on $config: $cost"
         echo "$config $cost" >> "$5/$algo.txt"
     done
 done < "$2"
