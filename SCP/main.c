@@ -168,10 +168,16 @@ void finalize(solution *sol){
     free((void *) inst);
 }
 
-/** Compare the cost of 2 solutions **/
+/** Compare the cost of 2 sets so the highest one is first **/
 int compare_cost(const void * a, const void * b)
 {
-    return ( inst->cost[*(int*)b] - inst->cost[*(int*)a] ); //cost of b - cost of a: sort from high to low cost
+    return ( inst->cost[*(int*)b] - inst->cost[*(int*)a]); //cost of b - cost of a: sort from high to low cost
+}
+
+/** Compare the cost and nrow of 2 sets so highest cost sets are first.
+ If costs are equal, the one covering more elements is first.**/
+int compare_cost_nrow(const void *a, const void *b) {
+    return ( inst->cost[*(int*)a] - inst->cost[*(int*)b] || inst->nrow[*(int*)b] - inst->nrow[*(int*)a]);
 }
 
 /** Make an array with the ids of set with decreasing cost **/
@@ -183,6 +189,15 @@ void sort_sets_descending() {
     return;
 }
 
+/** Make an array with the ids of set with increasing cost cost **/
+void sort_sets_ascending() {
+    int i;
+    inst->sorted_by_weight_nrow = (int *) mymalloc(inst->n*sizeof(int));
+    for (i = 0; i < inst->n; i++) inst->sorted_by_weight[i] = i;
+    qsort(inst->sorted_by_weight_nrow, inst->n, sizeof(int), compare_cost_nrow);
+    return;
+}
+
 /** Used by ils and aco to determine when to stop **/
 int termination_criterion(solution *sol) {
     struct timeval now;
@@ -191,8 +206,8 @@ int termination_criterion(solution *sol) {
         gettimeofday(start_time, NULL);
     }
     gettimeofday(&now, NULL);
-    if (sol) printf("\r%f / %f %i", mdifftime(&now, start_time), mt, sol->fx);
-    fflush(stdout);
+//    if (sol) printf("\r%f / %f %i", mdifftime(&now, start_time), mt, sol->fx);
+//    fflush(stdout);
     double time_elapsed = mdifftime(&now, start_time);
     return (mt && time_elapsed > mt) || (mc && ((sol && sol->fx <= mc) || time_elapsed > co));
 }
@@ -235,6 +250,8 @@ int main(int argc, char *argv[]) {
         ils_execute(inst, &sol, termination_criterion, notify_improvement, T, TL, CF, ro1, ro2);
     } else {
         sort_sets_descending();
+        sort_sets_ascending(); /* For set domination */
+        set_domination(inst);
         double beta = 5.0, ro=0.99, epsilon=0.005;
         int nants = 20;
         sol = aco_execute(inst, termination_criterion, notify_improvement, nants, beta, ro, epsilon);

@@ -114,3 +114,19 @@ int lowest_covering_set(instance *inst, int element) {
     }
     return lowest;
 }
+
+void set_domination(instance *inst) {
+    int i, set, total, j;
+    inst->dominated_set = (int *) mymalloc(inst->n*sizeof(int));
+    for (i = 0; i < inst->n; i++) {
+        total = 0;
+        set = inst->sorted_by_weight_nrow[i];
+        for (j = 0; j < inst->nrow[set]; j++) total += inst->cost[lowest_covering_set(inst, inst->row[set][j])];
+        if (total < inst->cost[set]) {
+            inst->dominated_set[set] = 1;
+        } else {
+            inst->dominated_set[set] = 0;
+        }
+    }
+    return;
+}

@@ -32,11 +32,11 @@ void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, 
         denominator = 0;
         for(i = 0; i < inst->ncol[chosen_element]; i++) { // Calculate denominator (used in pdf)
             set = inst->col[chosen_element][i];
-            if (current_ant->x[set]) continue;
+            if (current_ant->x[set] || inst->dominated_set[set]) continue;
             denominator += pheromones_trails[set]*pow(heuristic_information(inst, current_ant, set), beta);
         }
         for(i = 0; i < inst->n; i++) { // Calculate pdf itself
-            if (set_covers_element(inst, i, chosen_element) && !current_ant->x[i]) {
+            if (set_covers_element(inst, i, chosen_element) && !current_ant->x[i] && !inst->dominated_set[i]) {
                 pdf[i] = pheromones_trails[i]*pow(heuristic_information(inst, current_ant,i), beta) / denominator;
             } else {
                 pdf[i] = 0;
@@ -74,6 +74,7 @@ void update_pheromone_trails(instance *inst, ant *global_best, double *pheromone
     int i;
     double delta_tau = (double) 1 / (double) global_best->fx;
     for (i = 0; i < inst->n; i++) { // For each set
+        if (inst->dominated_set[i]) continue;
         pheromone_trails[i] = ro * pheromone_trails[i] + ((double) global_best->x[i] * delta_tau); // If the set is not in the solution, delta_tau_i = 0
         if (pheromone_trails[i] < tau_min) {
             pheromone_trails[i] = tau_min;
@@ -114,7 +115,7 @@ void aco_local_search(instance *inst, ant *current_ant) {
                 nonly_covered_by_i++;
             }
         }
-        if (nonly_covered_by_i >= 1) lowest1 = lowest_covering_set(inst, only_covered_by_i[0]); // Can be assigned in the first else if?
+        if (nonly_covered_by_i == 1 || nonly_covered_by_i == 2) lowest1 = lowest_covering_set(inst, only_covered_by_i[0]); // Can be assigned in the first else if?
         if (nonly_covered_by_i == 2) lowest2 = lowest_covering_set(inst, only_covered_by_i[1]); // Can be assigned in the second else if?
 
         if (nonly_covered_by_i == 0) {

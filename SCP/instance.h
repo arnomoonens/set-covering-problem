@@ -26,11 +26,14 @@ struct Instance {
     int *nrow;        /* nrow[i] number of rows that are covered by column i */
     int *cost;        /* cost[i] cost of column i  */
     int *sorted_by_weight; /* sets sorted by weight (in descending order) */
+    int *sorted_by_weight_nrow; /* sets sorted by weight (ascending order) and nrow (descending order) */
+    int *dominated_set; /* Notes if a set of a solution is dominated and thus may not be used */
 };
 
 instance *read_scp(char *filename);
 void print_instance(instance *inst, int level, char *scp_file);
 int set_covers_element(instance *inst, int set, int element);
 int lowest_covering_set(instance *inst, int element);
+void set_domination(instance *instance);
 
 #endif /* instance_h */
