@@ -39,7 +39,7 @@ solution *copy_solution(instance *inst, solution *source) {
     solution *new_sol = initialize(inst);
     new_sol->used_sets = source->used_sets;
     new_sol->fx = source->fx;
-    
+
     memcpy(new_sol->x, source->x, inst->n * sizeof(int));
     memcpy(new_sol->y, source->y, inst->m * sizeof(int));
 
@@ -158,20 +158,6 @@ int max_cost(instance *inst, solution *sol) {
         }
     }
     return max;
-}
-
-/** Set with lowest cost that covers an element **/
-int lowest_covering_set(instance *inst, solution *sol, int element) {
-    int i = 0, lowest = 0, lowest_c = -1, set, c;
-    for (; i < sol->ncol_cover[element]; i++) {
-        set = sol->col_cover[element][i];
-        c = inst->cost[set];
-        if (lowest_c < 0 || c < lowest_c) {
-            lowest = set;
-            lowest_c = c;
-        }
-    }
-    return lowest;
 }
 
 /** Add every set for which an element is only covered by that set **/

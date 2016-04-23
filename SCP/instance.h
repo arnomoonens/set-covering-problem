@@ -31,5 +31,6 @@ struct Instance {
 instance *read_scp(char *filename);
 void print_instance(instance *inst, int level, char *scp_file);
 int set_covers_element(instance *inst, int set, int element);
+int lowest_covering_set(instance *inst, int element);
 
 #endif /* instance_h */

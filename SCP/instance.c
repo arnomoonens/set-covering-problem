@@ -15,18 +15,18 @@ instance * read_scp(char *filename) {
     int *k;
     instance *inst = (instance *) mymalloc(sizeof(instance));
     FILE *fp = fopen(filename, "r" );
-    
+
     if (fscanf(fp,"%d",&inst->m)!=1)   /* number of rows = elements */
         error_reading_file("ERROR: there was an error reading instance file.");
     if (fscanf(fp,"%d",&inst->n)!=1)   /* number of columns  = sets*/
         error_reading_file("ERROR: there was an error reading instance file.");
-    
+
     /* Cost of the n columns */
     inst->cost = (int *) mymalloc(inst->n*sizeof(int));
     for (j=0; j<inst->n; j++)
         if (fscanf(fp,"%d",&inst->cost[j]) !=1)
             error_reading_file("ERROR: there was an error reading instance file.");
-    
+
     /* Info of columns that cover each row */
     inst->col  = (int **) mymalloc(inst->m*sizeof(int *)); //indexes of columns that cover each row
     inst->ncol = (int *) mymalloc(inst->m*sizeof(int)); //nr of columns that cover each row
@@ -40,7 +40,7 @@ instance * read_scp(char *filename) {
             inst->col[i][h]--; //I suppose in the instance file they start indexing at 1...
         }
     }
-    
+
     /* Info of rows that are covered by each column */
     inst->row  = (int **) mymalloc(inst->n*sizeof(int *)); //Indexes of rows that are covered by each column
     inst->nrow = (int *) mymalloc(inst->n*sizeof(int)); //Nr of rows that are covered by each column
@@ -67,11 +67,11 @@ instance * read_scp(char *filename) {
 /*** Use level>=1 to print more info (check the correct reading) */
 void print_instance(instance *inst, int level, char *scp_file) {
     int i;
-    
+
     printf("**********************************************\n");
     printf("  SCP INSTANCE: %s\n", scp_file);
     printf("  PROBLEM SIZE\t m = %d\t n = %d\n", inst->m, inst->n);
-    
+
     if(level >=1){
         printf("  COLUMN COST:\n");
         for(i=0; i<inst->n;i++)
@@ -86,9 +86,9 @@ void print_instance(instance *inst, int level, char *scp_file) {
             printf("%d ", inst->col[0][i]);
         printf("\n");
     }
-    
+
     printf("**********************************************\n\n");
-    
+
 }
 
 int set_covers_element(instance *inst, int set, int element) {
@@ -99,4 +99,18 @@ int set_covers_element(instance *inst, int set, int element) {
         }
     }
     return 0;
+}
+
+/** Set with lowest cost that covers an element **/
+int lowest_covering_set(instance *inst, int element) {
+    int i = 0, lowest = 0, lowest_c = -1, set, c;
+    for (; i < inst->ncol[element]; i++) {
+        set = inst->col[element][i];
+        c = inst->cost[set];
+        if (lowest_c < 0 || c < lowest_c) {
+            lowest = set;
+            lowest_c = c;
+        }
+    }
+    return lowest;
 }

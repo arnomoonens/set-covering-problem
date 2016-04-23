@@ -140,7 +140,7 @@ void read_parameters(int argc, char *argv[]) {
         usage();
         exit(EXIT_FAILURE);
     }
-    
+
     if ((mc || co) && !(mc && co)) {
         printf("Error: --mc and --co must be used together.\n");
         usage();
@@ -190,9 +190,9 @@ int termination_criterion(solution *sol) {
         start_time = (struct timeval *) mymalloc(sizeof(struct timeval));
         gettimeofday(start_time, NULL);
     }
-//    if (sol) printf("\r%f / %f %i", difftime(time(0), start_time), mt, sol->fx);
-//    fflush(stdout);
     gettimeofday(&now, NULL);
+    if (sol) printf("\r%f / %f %i", mdifftime(&now, start_time), mt, sol->fx);
+    fflush(stdout);
     double time_elapsed = mdifftime(&now, start_time);
     return (mt && time_elapsed > mt) || (mc && ((sol && sol->fx <= mc) || time_elapsed > co));
 }
@@ -235,7 +235,9 @@ int main(int argc, char *argv[]) {
         ils_execute(inst, &sol, termination_criterion, notify_improvement, T, TL, CF, ro1, ro2);
     } else {
         sort_sets_descending();
-        sol = aco_execute(inst, termination_criterion, notify_improvement, 20, 5.0, 0.99, 0.005);
+        double beta = 5.0, ro=0.99, epsilon=0.005;
+        int nants = 20;
+        sol = aco_execute(inst, termination_criterion, notify_improvement, nants, beta, ro, epsilon);
     }
     printf("%i", sol->fx);
     finalize(sol);

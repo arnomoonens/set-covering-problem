@@ -23,7 +23,7 @@ struct Solution {
     int *y;           /* y[i] 0,1 if row (=element) i covered by the actual solution */
     /** Note: Use incremental updates for the solution **/
     int fx;           /* sum of the cost of the columns selected in the solution (can be partial) */
-    
+
     /** Dynamic variables **/
     /** Note: use dynamic variables to make easier the construction and modification of solutions.  **/
     /**       these are just examples of useful variables.                                          **/
@@ -44,7 +44,6 @@ int find_max_weight_set(instance *inst, solution *sol, int ctr);
 void redundancy_elimination(instance *inst, solution *sol);
 int max_cost(instance *inst, solution *sol);
 void column_inclusion(instance *inst,  solution *sol);
-int lowest_covering_set(instance *inst, solution *sol, int element);
 void free_solution(instance *inst, solution *sol);
 
 #endif /* solution_h */

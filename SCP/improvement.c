@@ -40,7 +40,7 @@ void best_improvement(struct Instance *inst, solution **sol, void (*notify_impro
             }
         }
         if (improvement) {
-            notify_improvement(current_best);
+            //notify_improvement(current_best);
             free_solution(inst, *best_solution);
             *best_solution = current_best; //apply best move
             redundancy_elimination(inst, *best_solution);
@@ -53,25 +53,25 @@ void first_improvement(struct Instance *inst, solution **sol, void (*notify_impr
     int max_weight_set;
     int improvement = 1;
     int tried = 0;
-    solution ** best_solution = sol;
+    solution ** best_sol = sol;
     while (improvement) {
         tried = 0;
         improvement = 0;
-        int counter = (*best_solution)->used_sets;
+        int counter = (*best_sol)->used_sets;
         while (counter) {
             counter--;
-            tried = find_max_weight_set(inst, *best_solution, tried); //get set with highest cost starting from tried'th set
+            tried = find_max_weight_set(inst, *best_sol, tried); //get set with highest cost starting from tried'th set
             max_weight_set = inst->sorted_by_weight[tried];
             tried++;
-            solution *new_sol = copy_solution(inst, *best_solution);
+            solution *new_sol = copy_solution(inst, *best_sol);
             remove_set(inst, new_sol, max_weight_set);
-            execute(inst, new_sol, 4, max_weight_set);
-            if(new_sol->fx < (*best_solution)->fx) { //move improves
-                notify_improvement(new_sol);
+            execute(inst, new_sol, 4, max_weight_set); // rebuild solution
+            if(new_sol->fx < (*best_sol)->fx) { //move improves
+                //notify_improvement(new_sol);
                 improvement = 1;
-                free_solution(inst, *best_solution);
-                *best_solution = new_sol; //apply move
-                redundancy_elimination(inst, *best_solution);
+                free_solution(inst, *best_sol);
+                *best_sol = new_sol; //apply move
+                redundancy_elimination(inst, *best_sol);
                 break;
             }
         }
