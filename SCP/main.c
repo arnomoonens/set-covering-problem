@@ -191,8 +191,8 @@ int termination_criterion(solution *sol) {
         gettimeofday(start_time, NULL);
     }
     gettimeofday(&now, NULL);
-    if (sol) printf("\r%f / %f %i", mdifftime(&now, start_time), mt, sol->fx);
-    fflush(stdout);
+//    if (sol) printf("\r%f / %f %i", mdifftime(&now, start_time), mt, sol->fx);
+//    fflush(stdout);
     double time_elapsed = mdifftime(&now, start_time);
     return (mt && time_elapsed > mt) || (mc && ((sol && sol->fx <= mc) || time_elapsed > co));
 }

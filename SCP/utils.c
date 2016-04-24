@@ -16,6 +16,7 @@ void error_reading_file(char *text){
     exit( EXIT_FAILURE );
 }
 
+/** print error when file can't be written to **/
 void error_writing_file(char *text) {
     printf("%s\n", text);
     exit( EXIT_FAILURE );

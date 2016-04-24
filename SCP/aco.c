@@ -13,9 +13,8 @@ extern double heuristic_information(instance *inst, ant *current_ant, int set);
 
 /** Workings of construction (SROM):
  while(uncovered_elements(sol)):
-    t++;
     Randomly select an uncovered row i
-    Select a column j that covers i according to the probab. distribution p(j)=(tau*n)/sum_columnscoveringi(tau*n)
+    Select a column j that covers i according to the probab. distribution p(j)=(tau_j*n_j)/sum_columnscoveringi(tau_k*n_k)
 
 **/
 void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, double beta) {
@@ -37,7 +36,7 @@ void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, 
         }
         for(i = 0; i < inst->n; i++) { // Calculate pdf itself
             if (set_covers_element(inst, i, chosen_element) && !current_ant->x[i]) {
-                pdf[i] = pheromones_trails[i]*pow(heuristic_information(inst, current_ant,i), beta) / denominator;
+                pdf[i] = (pheromones_trails[i]*pow(heuristic_information(inst, current_ant,i), beta)) / denominator;
             } else {
                 pdf[i] = 0;
             }
@@ -148,33 +147,38 @@ void aco_local_search(instance *inst, ant *current_ant) {
 (9.         Perform subgradient method and get a new Lagrangian multiplier vector)
 **/
 solution * aco_execute(instance *inst, int (*termination_criterion)(solution *), void (*notify_improvement)(solution *), int nants, double beta, double ro, double epsilon) {
-    int i, all_set_costs = 0;
+    int i, all_set_costs = 0, improvement;
     double tau_min, tau_max;
     ant *global_best = NULL;
     ant **ants = mymalloc(nants * sizeof(ant *));
     for (i = 0; i < inst->n; i++) all_set_costs += inst->cost[i];
-    tau_max = (double) 1 / ((double) 1 - ro) * (double) all_set_costs; // Is total cost of all sets instead of cost of global best at the start
+    tau_max = (double) 1 / (((double) 1 - ro) * (double) all_set_costs); // Is total cost of all sets instead of cost of global best at the start
     tau_min = epsilon * tau_max;
     double *pheromones_trails = mymalloc(inst->n * sizeof(double));
-    for (i = 0; i < inst->n; i++) pheromones_trails[i] = tau_max; // Set initial pheromone trails to tau_max
+    for (i = 0; i < inst->n; i++) pheromones_trails[i] = ((double) rand() / (double) RAND_MAX * (tau_max - tau_min)) + tau_min; // Set initial pheromone trails to tau_max
     while(!termination_criterion(global_best)) {
+        improvement = 0;
         for (i = 0; i < nants; i++) { // For each ant...
             ants[i] = initialize(inst);
-            column_inclusion(inst, ants[i]); // Add sets that always need to be included (see explanation above function)
+            //column_inclusion(inst, ants[i]); // Add sets that always need to be included (see explanation above function)
             aco_construct(inst, ants[i], pheromones_trails, beta); // Construct a solution...
             aco_local_search(inst, ants[i]); /// And apply local search
             if (!global_best) {
                 global_best = ants[i];
+                improvement = 1;
                 notify_improvement(ants[i]);
             } else if (ants[i]->fx <= global_best->fx) {
                 if (ants[i]->fx < global_best->fx) notify_improvement(ants[i]);
                 free_ant(inst, global_best);
                 global_best = ants[i];
-                tau_max = (double) 1 / ((double) 1 - ro) * (double) global_best->fx;
-                tau_min = epsilon * tau_max;
+                improvement = 1;
             } else {
                 free_ant(inst, ants[i]);
             }
+        }
+        if (improvement) {
+            tau_max = (double) 1 / (((double) 1 - ro) * (double) global_best->fx);
+            tau_min = epsilon * tau_max;
         }
         update_pheromone_trails(inst, global_best, pheromones_trails, ro, tau_min, tau_max);
     }
