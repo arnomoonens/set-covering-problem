@@ -193,7 +193,7 @@ void sort_sets_descending() {
 void sort_sets_ascending() {
     int i;
     inst->sorted_by_weight_nrow = (int *) mymalloc(inst->n*sizeof(int));
-    for (i = 0; i < inst->n; i++) inst->sorted_by_weight[i] = i;
+    for (i = 0; i < inst->n; i++) inst->sorted_by_weight_nrow[i] = i;
     qsort(inst->sorted_by_weight_nrow, inst->n, sizeof(int), compare_cost_nrow);
     return;
 }
