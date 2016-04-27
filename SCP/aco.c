@@ -99,11 +99,15 @@ void update_pheromone_trails(instance *inst, ant *global_best, double *pheromone
         continue
 **/
 void aco_local_search(instance *inst, ant *current_ant) {
-    int i, j, set, element, lowest1 = 0, lowest2 = 0, nonly_covered_by_i;
+    int j, set, element, lowest1 = 0, lowest2 = 0, nonly_covered_by_i;
     int *only_covered_by_i;
-    for (i = 0; i < inst->n; i++) {
-        i = find_max_weight_set(inst, current_ant, i); // Consider columns from highest to lowest cost
-        set = inst->sorted_by_weight[i];
+    int tried = 0;
+    int counter = current_ant->used_sets;
+    while (counter) {
+        counter--;
+        tried = find_max_weight_set(inst, current_ant, tried); // Consider columns from highest to lowest cost
+        set = inst->sorted_by_weight[tried];
+        tried++;
         nonly_covered_by_i = 0; // |W_j| in the paper
         only_covered_by_i = (int *) mymalloc(inst->nrow[set]*sizeof(int)); // W_j in the paper
         for (j = 0; j < inst->nrow[set]; j++) {
