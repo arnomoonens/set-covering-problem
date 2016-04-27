@@ -13,9 +13,8 @@ extern double heuristic_information(instance *inst, ant *current_ant, int set);
 
 /** Workings of construction (SROM):
  while(uncovered_elements(sol)):
-    t++;
     Randomly select an uncovered row i
-    Select a column j that covers i according to the probab. distribution p(j)=(tau*n)/sum_columnscoveringi(tau*n)
+    Select a column j that covers i according to the probab. distribution p(j)=(tau_j*n_j)/sum_columnscoveringi(tau_k*n_k)
 
 **/
 void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, double beta) {
@@ -53,7 +52,7 @@ void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, 
  For a set, the heuristic information is the number of elements it covers extra divided by the cost of the set
  **/
 double heuristic_information(instance *inst, ant *current_ant, int set) {
-    return (double) added_elements(inst, current_ant, set) / (double) inst->cost[set];
+    return (double) current_ant->extra_covered[set] / (double) inst->cost[set];
 }
 
 /** Updating of pheromone trails
@@ -101,11 +100,15 @@ void update_pheromone_trails(instance *inst, ant *global_best, double *pheromone
         continue
 **/
 void aco_local_search(instance *inst, ant *current_ant) {
-    int i, j, set, element, lowest1 = 0, lowest2 = 0, nonly_covered_by_i;
+    int j, set, element, lowest1 = 0, lowest2 = 0, nonly_covered_by_i;
     int *only_covered_by_i;
-    for (i = 0; i < inst->n; i++) {
-        i = find_max_weight_set(inst, current_ant, i); // Consider columns from highest to lowest cost
-        set = inst->sorted_by_weight[i];
+    int tried = 0;
+    int counter = current_ant->used_sets;
+    while (counter) {
+        counter--;
+        tried = find_max_weight_set(inst, current_ant, tried); // Consider columns from highest to lowest cost
+        set = inst->sorted_by_weight[tried];
+        tried++;
         nonly_covered_by_i = 0; // |W_j| in the paper
         only_covered_by_i = (int *) mymalloc(inst->nrow[set]*sizeof(int)); // W_j in the paper
         for (j = 0; j < inst->nrow[set]; j++) {
@@ -118,15 +121,15 @@ void aco_local_search(instance *inst, ant *current_ant) {
         if (nonly_covered_by_i == 1 || nonly_covered_by_i == 2) lowest1 = lowest_covering_set(inst, only_covered_by_i[0]); // Can be assigned in the first else if?
         if (nonly_covered_by_i == 2) lowest2 = lowest_covering_set(inst, only_covered_by_i[1]); // Can be assigned in the second else if?
 
-        if (nonly_covered_by_i == 0) {
+        if (nonly_covered_by_i == 0) { // Set is redundant
             remove_set(inst, current_ant, set);
         } else if (nonly_covered_by_i == 1 && (set != lowest1)) {
             remove_set(inst, current_ant, set);
             add_set(inst, current_ant, lowest1);
-        } else if (nonly_covered_by_i == 2 && lowest1 == lowest2 && set != lowest1) {
+        } else if (nonly_covered_by_i == 2 && set != lowest1 && lowest1 == lowest2) {
             remove_set(inst, current_ant, set);
             add_set(inst, current_ant, lowest1);
-        } else if (nonly_covered_by_i == 2 && (inst->cost[lowest1] + inst->cost[lowest2] <= inst->cost[set])) {
+        } else if (nonly_covered_by_i == 2 && lowest1 != lowest2 && ((inst->cost[lowest1] + inst->cost[lowest2]) <= inst->cost[set])) {
             remove_set(inst, current_ant, set);
             add_set(inst, current_ant, lowest1);
             add_set(inst, current_ant, lowest2);
@@ -149,33 +152,38 @@ void aco_local_search(instance *inst, ant *current_ant) {
 (9.         Perform subgradient method and get a new Lagrangian multiplier vector)
 **/
 solution * aco_execute(instance *inst, int (*termination_criterion)(solution *), void (*notify_improvement)(solution *), int nants, double beta, double ro, double epsilon) {
-    int i, all_set_costs = 0;
+    int i, all_set_costs = 0, improvement;
     double tau_min, tau_max;
     ant *global_best = NULL;
     ant **ants = mymalloc(nants * sizeof(ant *));
     for (i = 0; i < inst->n; i++) all_set_costs += inst->cost[i];
-    tau_max = (double) 1 / ((double) 1 - ro) * (double) all_set_costs; // Is total cost of all sets instead of cost of global best at the start
+    tau_max = (double) 1 / (((double) 1 - ro) * (double) all_set_costs); // Is total cost of all sets instead of cost of global best at the start
     tau_min = epsilon * tau_max;
     double *pheromones_trails = mymalloc(inst->n * sizeof(double));
     for (i = 0; i < inst->n; i++) pheromones_trails[i] = tau_max; // Set initial pheromone trails to tau_max
     while(!termination_criterion(global_best)) {
+        improvement = 0;
         for (i = 0; i < nants; i++) { // For each ant...
-            ants[i] = initialize(inst);
-            column_inclusion(inst, ants[i]); // Add sets that always need to be included (see explanation above function)
+            ants[i] = initialize(inst, 1);
+            //column_inclusion(inst, ants[i]); // Add sets that always need to be included (see explanation above function)
             aco_construct(inst, ants[i], pheromones_trails, beta); // Construct a solution...
             aco_local_search(inst, ants[i]); /// And apply local search
             if (!global_best) {
                 global_best = ants[i];
+                improvement = 1;
                 notify_improvement(ants[i]);
             } else if (ants[i]->fx <= global_best->fx) {
                 if (ants[i]->fx < global_best->fx) notify_improvement(ants[i]);
                 free_ant(inst, global_best);
                 global_best = ants[i];
-                tau_max = (double) 1 / ((double) 1 - ro) * (double) global_best->fx;
-                tau_min = epsilon * tau_max;
+                improvement = 1;
             } else {
                 free_ant(inst, ants[i]);
             }
+        }
+        if (improvement) {
+            tau_max = (double) 1 / (((double) 1 - ro) * (double) global_best->fx);
+            tau_min = epsilon * tau_max;
         }
         update_pheromone_trails(inst, global_best, pheromones_trails, ro, tau_min, tau_max);
     }

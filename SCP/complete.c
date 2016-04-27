@@ -29,7 +29,7 @@ int choose_set(instance *inst, solution *sol, int ch, int exclude_set) {
         float current_cost;
         int extra_covered;
         for (i = 0; i < inst->n; i++) {
-            extra_covered = added_elements(inst, sol, i);
+            extra_covered = sol->extra_covered[i];
             if(extra_covered == 0 || i == exclude_set) continue; //Skip the set if it doesn't cover elements that weren't covered already
             //Calculate cost according to chosen algorithm
             if(ch == 2) current_cost = inst->cost[i];

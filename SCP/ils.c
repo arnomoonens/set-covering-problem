@@ -72,7 +72,7 @@ void ils_search(instance *inst, solution *sol, double ro1, double ro2) {
         float min_alfa = -1;
         for (i = 0; i < inst->n; i++) {
             if (candidate_sets[i]) {
-                alfa[i] = (float) inst->cost[i] / (float) added_elements(inst, sol, i); //same value as in CH4
+                alfa[i] = (float) inst->cost[i] / (float) sol->extra_covered[i]; //same value as in CH4
                 if (min_alfa < 0) {
                     min_alfa = alfa[i];
                 } else if (alfa[i] < min_alfa) {
@@ -103,14 +103,12 @@ void ils_execute(instance *inst, solution **sol, int (*termination_criterion)(so
     solution *current_best = *sol;
     *overall_best = current_best;
     while(!termination_criterion(*overall_best)) {
-//        printf("\r%f / %f", difftime(time(0), starttime), maxtime);
         for (i = 0; i < TL; i++) {
             new_sol = copy_solution(inst, current_best);
             ils_search(inst, new_sol, ro1, ro2);
             delta = new_sol->fx - current_best->fx;
             if (delta <= 0) { // New solution is better or equal: always keep it as the current and overall best
                 if (current_best != *overall_best) {
-//                    printf("Freeing current_best\n");
                     free_solution(inst, current_best);
                 }
                 current_best = new_sol;
@@ -119,7 +117,7 @@ void ils_execute(instance *inst, solution **sol, int (*termination_criterion)(so
                     free_solution(inst, *overall_best);
                     *overall_best = new_sol;
                 }
-            } else if (random_with_probability(exp(((double) delta)/T))) { //New solution is worse, keep it as the current 'best' with a probability
+            } else if (random_with_probability(exp((-(double) delta)/T))) { //New solution is worse, keep it as the current 'best' with a probability
                 if (current_best != *overall_best) {
                     free_solution(inst, current_best);
                 }
@@ -129,8 +127,6 @@ void ils_execute(instance *inst, solution **sol, int (*termination_criterion)(so
             }
         }
         T = T*CF;
-//        printf(" %i", (*overall_best)->fx);
-//        fflush(stdout);
     }
     *sol = *overall_best;
     free((void **) overall_best);

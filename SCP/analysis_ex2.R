@@ -62,22 +62,23 @@ rtd <- function(results, instance, t, q) {
 plot_qrtd <- function(algo, instance) {
     min.time <- Inf
     max.time <- 0
-    for(run in runs) {
+    for(run in 1:runs) {
         df <- part2.results[[algo]][[instance]][[run]]
         min.time <- min(min.time, head(df, n=1)$time)
         max.time <- max(max.time, tail(df, n=1)$time)
     }
     time <- min.time * 0.5
-    stop.time <- max.time * 1.5
+    stop.time <- max.time * 1.2
+    step.size <- (max.time - min.time)/100
     x <- list()
     y <- list()
     while(time <= stop.time) {
         x <- c(x, time)
         res <- rtd(part2.results[[algo]], instance, time, trace.config[instance,]$best*1.02)
         y <- c(y, res)
-        time <- time * 1.05
+        time <- time + step.size
     }
-    plot(x,y, xlab="Run-time", ylab="P(solve)", main=paste0("Qualified run distribution for ", algo, " on instance ", instance))
+    plot(x,y, xlab="Run-time (seconds)", ylab="P(solve)", main=paste0("Qualified run distribution for ", algo, " on instance ", instance), pch=NA)
     lines(x,y)
 }
 

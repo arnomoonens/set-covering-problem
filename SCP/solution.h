@@ -32,14 +32,14 @@ struct Solution {
     int used_sets;
     int **col_cover;   /* col_colver[i] selected columns that cover row i */
     int *ncol_cover;   /* number of selected columns that cover row i */
+    int *extra_covered;
 };
 
-solution *initialize(instance *inst);
+solution *initialize(instance *inst, int filled);
 solution *copy_solution(instance *inst, solution *source);
 void add_set(instance *inst, solution *sol, int set);
 void remove_set(instance *inst, solution *sol, int set);
 int uncovered_elements(instance *inst, solution *sol);
-int added_elements(instance *inst, solution *sol, int set);
 int find_max_weight_set(instance *inst, solution *sol, int ctr);
 void redundancy_elimination(instance *inst, solution *sol);
 int max_cost(instance *inst, solution *sol);

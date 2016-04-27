@@ -8,27 +8,34 @@
 
 #include "solution.h"
 
-/*** Initialize a solution and all its variables **/
-solution *initialize(instance *inst) {
+/*** Initialize a solution and all its variables 
+ filled=1 if arrays and values already have to be filled with e.g. zeroes
+ **/
+solution *initialize(instance *inst, int filled) {
     solution *sol = mymalloc(sizeof(solution));
     int i, j;
     sol->x = (int *) mymalloc(inst->n*sizeof(int));
-    for (i = 0; i < inst->n; i++) {sol->x[i] = 0;}
     sol->y = (int *) mymalloc(inst->m*sizeof(int));
-    for (i = 0; i < inst->m; i++) {sol->y[i] = 0;}
-
     sol->col_cover = (int **) mymalloc(inst->m*sizeof(int *));
     for (i=0; i<inst->m; i++) {
         sol->col_cover[i] = (int *) mymalloc(inst->ncol[i]*sizeof(int));
-        for (j = 0; j < inst->ncol[i]; j++) {
-            sol->col_cover[i][j] = -1;
-        }
     }
-
     sol->ncol_cover = (int *) mymalloc(inst->m*sizeof(int));
-    for (i = 0; i<inst->m; i++) {sol->ncol_cover[i] = 0;}
-    sol->fx = 0;
-    sol->used_sets = 0;
+    sol->extra_covered = (int *) mymalloc(inst->n*sizeof(int));
+    
+    if (filled) {
+        for (i = 0; i < inst->n; i++) {sol->x[i] = 0;}
+        for (i = 0; i < inst->m; i++) {sol->y[i] = 0;}
+        for (i=0; i<inst->m; i++) {
+            for (j = 0; j < inst->ncol[i]; j++) {
+                sol->col_cover[i][j] = -1;
+            }
+        }
+        for (i = 0; i<inst->m; i++) {sol->ncol_cover[i] = 0;}
+        sol->fx = 0;
+        sol->used_sets = 0;
+        memcpy(sol->extra_covered, inst->nrow, inst->n * sizeof(int));
+    }
     return sol;
 }
 
@@ -36,7 +43,7 @@ solution *initialize(instance *inst) {
 /** Copy a solution to a newly initialized one **/
 solution *copy_solution(instance *inst, solution *source) {
     int i;
-    solution *new_sol = initialize(inst);
+    solution *new_sol = initialize(inst, 0);
     new_sol->used_sets = source->used_sets;
     new_sol->fx = source->fx;
 
@@ -47,16 +54,23 @@ solution *copy_solution(instance *inst, solution *source) {
         memcpy(new_sol->col_cover[i], source->col_cover[i], source->ncol_cover[i] * sizeof(int));
     }
     memcpy(new_sol->ncol_cover, source->ncol_cover, inst->m * sizeof(int));
+    
+    memcpy(new_sol->extra_covered, source->extra_covered, inst->n * sizeof(int));
 
     return new_sol;
 }
 
 // Add a set to the current solution
 void add_set(instance *inst, solution *sol, int set) {
-    int i, element;
+    int i, element, j;
     for (i = 0; i < inst->nrow[set]; i++) { //Say that we cover each element that the chosen set covers
         element = inst->row[set][i];
-        sol->y[element] = 1;
+        if (!sol->y[element]) {
+            for (j = 0; j<inst->ncol[element]; j++) {
+                sol->extra_covered[inst->col[element][j]]--;
+            }
+            sol->y[element] = 1;
+        }
         sol->col_cover[element][sol->ncol_cover[element]] = set;
         sol->ncol_cover[element]++;
     }
@@ -69,7 +83,7 @@ void add_set(instance *inst, solution *sol, int set) {
 
 /** Remove a set from a solution **/
 void remove_set(instance *inst, solution *sol, int set) {
-    int i, j, k;
+    int i, j, k, l;
     sol->used_sets--;
     sol->x[set] = 0;
     sol->fx -= inst->cost[set];
@@ -82,7 +96,11 @@ void remove_set(instance *inst, solution *sol, int set) {
                 sol->ncol_cover[i]--;
                 if (!sol->ncol_cover[i]) { //No included sets cover element i anymore
                     sol->y[i] = 0;
+                    for (l = 0; l<inst->ncol[i]; l++) {
+                        sol->extra_covered[inst->col[i][l]]++;
+                    }
                 }
+                
                 break;
             }
         }
@@ -96,15 +114,6 @@ int uncovered_elements(instance *inst, solution *sol) {
     for (i = 0; i < inst->m; i++)
         if(!sol->y[i]) return 1;
     return 0;
-}
-
-/** Returns how many yet uncovered elements the set would cover **/
-int added_elements(instance *inst, solution *sol, int set) {
-    int count = 0;
-    int i;
-    for (i = 0; i < inst->nrow[set]; i++)
-        if (!sol->y[inst->row[set][i]]) count++;
-    return count;
 }
 
 /** Find the ctr'th highest cost set of an instance **/
@@ -180,6 +189,7 @@ void free_solution(instance *inst, solution *sol) {
     }
     free((void **) sol->col_cover);
     free((void *) sol->ncol_cover);
+    free((void *) sol->extra_covered);
     free((void *) sol);
     return;
 }
