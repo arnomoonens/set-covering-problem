@@ -72,7 +72,7 @@ void ils_search(instance *inst, solution *sol, double ro1, double ro2) {
         float min_alfa = -1;
         for (i = 0; i < inst->n; i++) {
             if (candidate_sets[i]) {
-                alfa[i] = (float) inst->cost[i] / (float) added_elements(inst, sol, i); //same value as in CH4
+                alfa[i] = (float) inst->cost[i] / (float) sol->extra_covered[i]; //same value as in CH4
                 if (min_alfa < 0) {
                     min_alfa = alfa[i];
                 } else if (alfa[i] < min_alfa) {

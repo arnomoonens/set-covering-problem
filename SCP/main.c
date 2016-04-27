@@ -186,7 +186,7 @@ void sort_sets_descending() {
 /** Used by ils and aco to determine when to stop **/
 int termination_criterion(solution *sol) {
     struct timeval now;
-    if (start_time == NULL) {
+    if (!start_time) {
         start_time = (struct timeval *) mymalloc(sizeof(struct timeval));
         gettimeofday(start_time, NULL);
     }
@@ -201,6 +201,10 @@ int termination_criterion(solution *sol) {
 void notify_improvement(solution *sol) {
     struct timeval now;
     gettimeofday(&now, NULL);
+    if (!start_time) {
+        start_time = (struct timeval *) mymalloc(sizeof(struct timeval));
+        gettimeofday(start_time, NULL);
+    }
     double time_elapsed = mdifftime(&now, start_time);
     FILE *fp = fopen(trace_file, "a" );
     if(strlen(trace_file) != 0 && fprintf(fp, "%f, %i\n", time_elapsed, sol->fx) < 0)
@@ -217,7 +221,7 @@ int main(int argc, char *argv[]) {
     inst = read_scp(scp_file);
     //print_instance(0);
     if (ch) {
-        sol = initialize(inst);
+        sol = initialize(inst, 1);
         execute(inst, sol, ch, -1); // index of set to exclude is set to -1: don't exclude a set from possible being used
         if (re || bi || fi) {
             sort_sets_descending();
@@ -227,7 +231,7 @@ int main(int argc, char *argv[]) {
             free((void *) inst->sorted_by_weight);
         }
     } else if (ils) {
-        sol = initialize(inst);
+        sol = initialize(inst, 1);
         sort_sets_descending();
         execute(inst, sol, 4, -1); //Construct an initial solution using CH4
         // Use PS3 settings from paper

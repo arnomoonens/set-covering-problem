@@ -67,12 +67,11 @@ void first_improvement(struct Instance *inst, solution **sol, void (*notify_impr
             remove_set(inst, new_sol, max_weight_set);
             execute(inst, new_sol, 4, max_weight_set); // rebuild solution
             if(new_sol->fx < (*best_sol)->fx) { //move improves
-                //notify_improvement(new_sol);
+                notify_improvement(new_sol);
                 improvement = 1;
                 free_solution(inst, *best_sol);
                 *best_sol = new_sol; //apply move
                 redundancy_elimination(inst, *best_sol);
-                break;
             }
         }
     }
