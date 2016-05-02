@@ -8,54 +8,11 @@
 
 #include "ils.h"
 
-/** How it works:
-
- MT = maximum CPU time;
- T = initial temperature, a parameter which controls the probability of accepting an inferior solution;
- TL = temperature length, the number of iterations at a particular value of T;
- CF= coolingfactor; the percentage by which T is reduced after TL iterations;
-
- CONSTRUCT a feasible solution S with cost Z(S)
- set T, TL, and CF
- set the maximum run time, MT
- read the current clock time, ctime
- do while ctime<MT
- do i= 1, TL
- SEARCH for a neighbor S’ of S
- let Z(S’) = the cost of S’
- if Z(S’) <= Z(S)
- let S = S’
- let S* = S’
- else
- let S = S’ with probability e^(-6/T)
- end if
- continue
- let T= T * CF
- read ctime
- continue
- return the minimum cost solution S* and Z (S*)
- end
-
-
- SEARCH:
- 0. Set d=0,D=ceiling(ro1*N(S)),and E=ceiling(ro2*Q(S))
- 1. Randomly select a set k, with k element of the solution.
- 2. Remove this set, increment d. If d=D go to 3, else go to 1
- 3. if uncovered_elements(S), go to 4 else go to 6
- 4. Define RE as the set of sets which have a cost <= E. Compute the following
- a_ij= 1,if w_i=0 and a_ij= 1 for all i element ofI,j element of RE;0,Otherwise
- a_j= sum of a_ij for all j element of RE;
- Beta_j = c_j/a_j for all j element of RE.
- Beta_min = min_j(Beta_j | j element of RE)
- K = set of columns for which Beta_j = Beta_min | j element of RE.
- 5. Randomly select a column k element of K and add that set to the solution. Return to step 3.
- 6. Apply redundancy elimination
- **/
-
+/** Local search phase of ils algorithm **/
 void ils_search(instance *inst, solution *sol, double ro1, double ro2) {
     int i, set;
-    double D = ceil(((double) sol->used_sets) * ro1); //number of sets to remove
-    double E = ceil(((double) max_cost(inst, sol)) * ro2); //maximum cost of candidate sets for rebuilding solution
+    double D = ceil(((double) sol->used_sets) * ro1); // number of sets to remove
+    double E = ceil(((double) max_cost(inst, sol)) * ro2); // maximum cost of candidate sets for rebuilding solution
     int *candidate_sets = (int *) mymalloc(inst->n*sizeof(int));
     float *alfa = (float *) mymalloc(inst->n*sizeof(float));
     for (i = 0; i < D; i++) { //Randomly remove D sets
@@ -65,14 +22,14 @@ void ils_search(instance *inst, solution *sol, double ro1, double ro2) {
         }
         remove_set(inst, sol, set);
     }
-    while (uncovered_elements(inst, sol)) { //Rebuild solution
+    while (uncovered_elements(inst, sol)) { // Rebuild solution
         for (i = 0; i < inst->n; i++) {
-            candidate_sets[i] = !sol->x[i] && inst->cost[i] <= E; //A set is still a candidate if it's unused and its cost <= E
+            candidate_sets[i] = !sol->x[i] && inst->cost[i] <= E; // A set is still a candidate if it's unused and its cost <= E
         }
         float min_alfa = -1;
         for (i = 0; i < inst->n; i++) {
             if (candidate_sets[i]) {
-                alfa[i] = (float) inst->cost[i] / (float) sol->extra_covered[i]; //same value as in CH4
+                alfa[i] = (float) inst->cost[i] / (float) sol->extra_covered[i]; // same value as in CH4
                 if (min_alfa < 0) {
                     min_alfa = alfa[i];
                 } else if (alfa[i] < min_alfa) {
@@ -80,11 +37,11 @@ void ils_search(instance *inst, solution *sol, double ro1, double ro2) {
                 }
             }
         }
-        for (i = 0; i < inst->n; i++) { //A candidate set remains a candidate if its alfa is minimal
+        for (i = 0; i < inst->n; i++) { // A candidate set remains a candidate if its alfa is minimal
             candidate_sets[i] = candidate_sets[i] && (alfa[i] == min_alfa);
         }
         int chosen_set = -1;
-        while (chosen_set < 0 || !candidate_sets[chosen_set]) { //Randomly choose out of the candidate sets
+        while (chosen_set < 0 || !candidate_sets[chosen_set]) { // Randomly choose out of the candidate sets
             chosen_set = rand() % inst->n;
         }
         add_set(inst, sol, chosen_set);
@@ -95,7 +52,7 @@ void ils_search(instance *inst, solution *sol, double ro1, double ro2) {
     return;
 }
 
-
+/** Executes ils algorithm **/
 void ils_execute(instance *inst, solution **sol, int (*termination_criterion)(solution *), void (*notify_improvement)(solution *), double T, double TL, double CF, double ro1, double ro2) {
     int i, delta;
     solution **overall_best = (solution **) mymalloc(sizeof(solution *));
@@ -103,7 +60,7 @@ void ils_execute(instance *inst, solution **sol, int (*termination_criterion)(so
     solution *current_best = *sol;
     *overall_best = current_best;
     while(!termination_criterion(*overall_best)) {
-        for (i = 0; i < TL; i++) {
+        for (i = 0; i < TL; i++) { // Keep a certain temperature T for temperature length TL times
             new_sol = copy_solution(inst, current_best);
             ils_search(inst, new_sol, ro1, ro2);
             delta = new_sol->fx - current_best->fx;
@@ -117,16 +74,14 @@ void ils_execute(instance *inst, solution **sol, int (*termination_criterion)(so
                     free_solution(inst, *overall_best);
                     *overall_best = new_sol;
                 }
-            } else if (random_with_probability(exp((-(double) delta)/T))) { //New solution is worse, keep it as the current 'best' with a probability
+            } else if (random_with_probability(exp((-(double) delta)/T))) { // New solution is worse, keep it as the current 'best' with a probability
                 if (current_best != *overall_best) {
                     free_solution(inst, current_best);
                 }
                 current_best = new_sol;
-            } else {
-                free_solution(inst, new_sol);
-            }
+            } else free_solution(inst, new_sol);
         }
-        T = T*CF;
+        T = T*CF; // TL iterations done, update temperature
     }
     *sol = *overall_best;
     free((void **) overall_best);

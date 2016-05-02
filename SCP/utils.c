@@ -22,12 +22,12 @@ void error_writing_file(char *text) {
     exit( EXIT_FAILURE );
 }
 
-
-//WRITE AS MACRO INSTEAD?
+/** Returns 1 or 0 by probability p **/
 int random_with_probability(double p) {
     return ((double)rand() / (double)RAND_MAX) < p;
 }
 
+/** Choose an index by a corresponding array of probabilities **/
 int random_with_pdf(double *probabilities, int n) {
     int i;
     double p =(double)rand() / (double)RAND_MAX;
@@ -38,10 +38,11 @@ int random_with_pdf(double *probabilities, int n) {
             return i;
         }
     }
-    printf("This should not happen.\n");
+    printf("ERROR: Nothing chosen using probability distribution.\n");
     exit( EXIT_FAILURE );
 }
 
+/** Difference between start and end in seconds **/
 double mdifftime(struct timeval *end, struct timeval *start) {
     return (end->tv_sec - start->tv_sec) + (end->tv_usec - start->tv_usec)/(double)1000000;
 }

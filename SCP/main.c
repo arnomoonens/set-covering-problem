@@ -62,7 +62,7 @@ void usage(){
     printf("\n");
 }
 
-/*Read parameters from command line*/
+/* Read parameters from command line */
 void read_parameters(int argc, char *argv[]) {
     int i;
     if(argc<=1) {
@@ -124,7 +124,7 @@ void read_parameters(int argc, char *argv[]) {
         usage();
         exit( EXIT_FAILURE );
     }
-    if (bi & fi) { //bitwise and
+    if (bi & fi) { // bitwise and
         printf("Error: maximally one of --bi and --fi may be provided.\n");
         usage();
         exit( EXIT_FAILURE );
@@ -217,7 +217,7 @@ void notify_improvement(solution *sol) {
 int main(int argc, char *argv[]) {
     solution *sol;
     read_parameters(argc, argv);
-    srand(seed); /*set seed */
+    srand(seed); /* set seed */
     inst = read_scp(scp_file);
     //print_instance(0);
     if (ch) {
@@ -231,9 +231,9 @@ int main(int argc, char *argv[]) {
             free((void *) inst->sorted_by_weight);
         }
     } else if (ils) {
-        sol = initialize(inst, 1);
+        sol = initialize(inst, 1); // Initialize an empty solution
         sort_sets_descending();
-        execute(inst, sol, 4, -1); //Construct an initial solution using CH4
+        execute(inst, sol, 4, -1); // Construct an initial solution using CH4
         // Use PS3 settings from paper
         double T = 1.3, TL = 100, CF = 0.9, ro1 = 0.4, ro2 = 1.1;
         ils_execute(inst, &sol, termination_criterion, notify_improvement, T, TL, CF, ro1, ro2);

@@ -11,12 +11,7 @@
 
 extern double heuristic_information(instance *inst, ant *current_ant, int set);
 
-/** Workings of construction (SROM):
- while(uncovered_elements(sol)):
-    Randomly select an uncovered row i
-    Select a column j that covers i according to the probab. distribution p(j)=(tau_j*n_j)/sum_columnscoveringi(tau_k*n_k)
-
-**/
+/** Construction (SROM) phase of aco **/
 void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, double beta) {
     int i, found_element, chosen_element, chosen_set, set;
     double denominator;
@@ -55,24 +50,11 @@ double heuristic_information(instance *inst, ant *current_ant, int set) {
     return (double) current_ant->extra_covered[set] / (double) inst->cost[set];
 }
 
-/** Updating of pheromone trails
- (S_gb = globally best solution)
- Tau_j = ro*Tau_j + deltaTau_j, for each j element of J
- deltaTau_j = 1/sum(c_q for q in S_gb), if j in S_gb
-            = 0, otherwise
- if Tau_j < Tau_min, then Tau_j = Tau_min
- if Tau_j > Tau_max, then Tau_j = Tau_max
-
- 0 <= ro < 1: pheromone persistence
- Tau_max is an estimate of the asymptotically maximum value of pheromone trails, i.e Tau_max = 1/(1-ro)(sum(c_j for each j in S_gb)
- Each time a new best solution is found, Tau_max is updated
- Tau_min is set to epsilon*Tau_max, where epsilon (with 0 < epsilon < 1) is a ratio coefficient.
- Pheromone trails are initialized to an arbitrary high value for the purpose of achieving a higher exploration of solution space at the beginning of the algorithm.
-**/
+/** Updating of pheromone trails of sets **/
 void update_pheromone_trails(instance *inst, ant *global_best, double *pheromone_trails, double ro, double tau_min, double tau_max) {
     int i;
     double delta_tau = (double) 1 / (double) global_best->fx;
-    for (i = 0; i < inst->n; i++) { // For each set
+    for (i = 0; i < inst->n; i++) {
         pheromone_trails[i] = ro * pheromone_trails[i] + ((double) global_best->x[i] * delta_tau); // If the set is not in the solution, delta_tau_i = 0
         if (pheromone_trails[i] < tau_min) {
             pheromone_trails[i] = tau_min;
@@ -84,20 +66,7 @@ void update_pheromone_trails(instance *inst, ant *global_best, double *pheromone
 }
 
 
-/** Local search
- For each set j in the list of sets sorted by cost (highest->lowest):
-    Compute W_j: elements only covered by set j
-    If |W_j| = 0:
-        set is redundant, remove it
-    else if |W_j| = 1 and j /= low_q (low_q = set with lowest cost covering element q, only element of W_j):
-        replace j with low_q
-    else if |W_j| = 2 and j /= low_q1 = low_q2 (set with minimal cost covering element q1 is the same as the one covering q2, but different from j):
-        replace j with low_q1
-    else if |W_j| = 2 and low_q1 /= low_q2 and c_lowq1 + c_lowq2 <= c_j (sum of costs of low_q1 and low_q2 is lower than cost of j):
-        replace j with low_q1 and low_q2
-    else:
-        continue
-**/
+/** Local search phase of aco**/
 void aco_local_search(instance *inst, ant *current_ant) {
     int j, set, element, lowest1 = 0, lowest2 = 0, nonly_covered_by_i;
     int *only_covered_by_i;
@@ -117,8 +86,8 @@ void aco_local_search(instance *inst, ant *current_ant) {
                 nonly_covered_by_i++;
             }
         }
-        if (nonly_covered_by_i == 1 || nonly_covered_by_i == 2) lowest1 = lowest_covering_set(inst, only_covered_by_i[0]); // Can be assigned in the first else if?
-        if (nonly_covered_by_i == 2) lowest2 = lowest_covering_set(inst, only_covered_by_i[1]); // Can be assigned in the second else if?
+        if (nonly_covered_by_i == 1 || nonly_covered_by_i == 2) lowest1 = lowest_covering_set(inst, only_covered_by_i[0]);
+        if (nonly_covered_by_i == 2) lowest2 = lowest_covering_set(inst, only_covered_by_i[1]);
 
         if (nonly_covered_by_i == 0) { // Set is redundant
             remove_set(inst, current_ant, set);
@@ -138,18 +107,7 @@ void aco_local_search(instance *inst, ant *current_ant) {
     return;
 }
 
-/** Total framework
- 0. Apply column domination stuff
- 1. Get a Lagrangian multiplier vector with subgradient method OR use simpler method of calculating heuristic information
- 2. Initialize pheromone trails and related parameters
- 3. while termination condition is not met:
- 4.     for each ant i:
- 5.         Construct a solution S based on SROM
- 6.         Apply local search to solution S optionally
- 7.     Update pheromone trails
-(8.     If the best solution is not improved for p consecutive iterations:)
-(9.         Perform subgradient method and get a new Lagrangian multiplier vector)
-**/
+/** Execute aco algorithm **/
 solution * aco_execute(instance *inst, int (*termination_criterion)(solution *), void (*notify_improvement)(solution *), int nants, double beta, double ro, double epsilon) {
     int i, all_set_costs = 0, improvement;
     double tau_min, tau_max;
@@ -186,7 +144,7 @@ solution * aco_execute(instance *inst, int (*termination_criterion)(solution *),
         }
         update_pheromone_trails(inst, global_best, pheromones_trails, ro, tau_min, tau_max);
     }
-    //free all arrays
+    // free all arrays
     free((void *) pheromones_trails);
     free((void *) ants);
     return global_best;

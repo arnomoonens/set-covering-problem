@@ -8,13 +8,6 @@
 
 #include "improvement.h"
 
-
-/**Working of best_improvement:
- - Find set with i'th highest cost that's used and remove it
- - Use adapted execute function that doesn't use removed set
- - Calculate and save cost
- - keep solution with lowest cost
- **/
 void best_improvement(struct Instance *inst, solution **sol, void (*notify_improvement)(solution *)) {
     int max_weight_set;
     int improvement = 1;

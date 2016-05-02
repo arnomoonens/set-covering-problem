@@ -91,6 +91,7 @@ void print_instance(instance *inst, int level, char *scp_file) {
 
 }
 
+/** Check if set covers element in inst **/
 int set_covers_element(instance *inst, int set, int element) {
     int i;
     for (i = 0; i < inst->ncol[element]; i++) {
