@@ -48,7 +48,7 @@ void ils_search(instance *inst, solution *sol, double ro1, double ro2) {
     }
     free((void *) candidate_sets);
     free((void *) alfa);
-    redundancy_elimination(inst, sol);
+    redundancy_elimination(inst, sol); // Apply redundancy elimination after the solution is rebuilt
     return;
 }
 
@@ -75,13 +75,13 @@ void ils_execute(instance *inst, solution **sol, int (*termination_criterion)(so
                     *overall_best = new_sol;
                 }
             } else if (random_with_probability(exp((-(double) delta)/T))) { // New solution is worse, keep it as the current 'best' with a probability
-                if (current_best != *overall_best) {
+                if (current_best != *overall_best) { // Don't free the current best solution if it's also the overall best
                     free_solution(inst, current_best);
                 }
                 current_best = new_sol;
             } else free_solution(inst, new_sol);
         }
-        T = T*CF; // TL iterations done, update temperature
+        T = T*CF; // TL iterations done, cool down the temperature
     }
     *sol = *overall_best;
     free((void **) overall_best);

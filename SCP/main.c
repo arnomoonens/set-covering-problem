@@ -234,6 +234,7 @@ int main(int argc, char *argv[]) {
         sol = initialize(inst, 1); // Initialize an empty solution
         sort_sets_descending();
         execute(inst, sol, 4, -1); // Construct an initial solution using CH4
+        redundancy_elimination(inst, sol);
         // Use PS3 settings from paper
         double T = 1.3, TL = 100, CF = 0.9, ro1 = 0.4, ro2 = 1.1;
         ils_execute(inst, &sol, termination_criterion, notify_improvement, T, TL, CF, ro1, ro2);

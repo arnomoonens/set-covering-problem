@@ -122,7 +122,7 @@ solution * aco_execute(instance *inst, int (*termination_criterion)(solution *),
         improvement = 0;
         for (i = 0; i < nants; i++) { // For each ant...
             ants[i] = initialize(inst, 1);
-            //column_inclusion(inst, ants[i]); // Add sets that always need to be included (see explanation above function)
+//            column_inclusion(inst, ants[i]); // Add sets that always need to be included
             aco_construct(inst, ants[i], pheromones_trails, beta); // Construct a solution...
             aco_local_search(inst, ants[i]); /// And apply local search
             if (!global_best) {
