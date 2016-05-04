@@ -54,7 +54,7 @@ int choose_set(instance *inst, solution *sol, int ch, int exclude_set) {
     }
 }
 
-/*** Build solution ***/
+/** Build solution **/
 void execute(instance *inst, solution *sol, int ch, int exclude_set) {
     int chosen_set;
     while (uncovered_elements(inst, sol)) {

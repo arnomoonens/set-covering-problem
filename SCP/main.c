@@ -32,7 +32,7 @@ int seed=1234567;
 char *scp_file="";
 
 /** Variables to activate algorithms **/
-int ch=0, bi=0, fi=0, re=0, ils=0, aco=0;
+int ch=0, bi=0, fi=0, re=0, ils=0, aco=0, iterations=0;
 double mt=0, mc=0, co=0;
 struct timeval *start_time = NULL;
 char *trace_file="";
@@ -62,7 +62,7 @@ void usage(){
     printf("\n");
 }
 
-/*Read parameters from command line*/
+/* Read parameters from command line */
 void read_parameters(int argc, char *argv[]) {
     int i;
     if(argc<=1) {
@@ -124,7 +124,7 @@ void read_parameters(int argc, char *argv[]) {
         usage();
         exit( EXIT_FAILURE );
     }
-    if (bi & fi) { //bitwise and
+    if (bi & fi) { // bitwise and
         printf("Error: maximally one of --bi and --fi may be provided.\n");
         usage();
         exit( EXIT_FAILURE );
@@ -206,7 +206,7 @@ int termination_criterion(solution *sol) {
         gettimeofday(start_time, NULL);
     }
     gettimeofday(&now, NULL);
-//    if (sol) printf("\r%f / %f %i", mdifftime(&now, start_time), mt, sol->fx);
+//    if (sol) printf("\rIteration %i:%f / %f %i", ++iterations, mdifftime(&now, start_time), mt, sol->fx);
 //    fflush(stdout);
     double time_elapsed = mdifftime(&now, start_time);
     return (mt && time_elapsed > mt) || (mc && ((sol && sol->fx <= mc) || time_elapsed > co));
@@ -232,7 +232,7 @@ void notify_improvement(solution *sol) {
 int main(int argc, char *argv[]) {
     solution *sol;
     read_parameters(argc, argv);
-    srand(seed); /*set seed */
+    srand(seed); /* set seed */
     inst = read_scp(scp_file);
     //print_instance(0);
     if (ch) {
@@ -246,9 +246,10 @@ int main(int argc, char *argv[]) {
             free((void *) inst->sorted_by_weight);
         }
     } else if (ils) {
-        sol = initialize(inst, 1);
+        sol = initialize(inst, 1); // Initialize an empty solution
         sort_sets_descending();
-        execute(inst, sol, 4, -1); //Construct an initial solution using CH4
+        execute(inst, sol, 4, -1); // Construct an initial solution using CH4
+        redundancy_elimination(inst, sol);
         // Use PS3 settings from paper
         double T = 1.3, TL = 100, CF = 0.9, ro1 = 0.4, ro2 = 1.1;
         ils_execute(inst, &sol, termination_criterion, notify_improvement, T, TL, CF, ro1, ro2);

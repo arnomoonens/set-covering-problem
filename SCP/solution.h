@@ -19,20 +19,14 @@
 /** Holds all solution information **/
 typedef struct Solution solution;
 struct Solution {
-    int *x;           /* x[i] 0,1 if column (= set) i is selected */
-    int *y;           /* y[i] 0,1 if row (=element) i covered by the actual solution */
-    /** Note: Use incremental updates for the solution **/
-    int fx;           /* sum of the cost of the columns selected in the solution (can be partial) */
+    int *x;             /* x[i] 0,1 if column (= set) i is selected */
+    int *y;             /* y[i] 0,1 if row (=element) i covered by the actual solution */
+    int fx;             /* sum of the cost of the columns selected in the solution (can be partial) */
 
-    /** Dynamic variables **/
-    /** Note: use dynamic variables to make easier the construction and modification of solutions.  **/
-    /**       these are just examples of useful variables.                                          **/
-    /**       these variables need to be updated every time a column is added to a partial solution **/
-    /**       or when a complete solution is modified*/
-    int used_sets;
-    int **col_cover;   /* col_colver[i] selected columns that cover row i */
-    int *ncol_cover;   /* number of selected columns that cover row i */
-    int *extra_covered;
+    int used_sets;      /* Number of sets used in the solution */
+    int **col_cover;    /* col_cover[i] selected columns that cover row i */
+    int *ncol_cover;    /* number of selected columns that cover row i */
+    int *extra_covered; /* For each set the number of still uncovered elements it can cover */
 };
 
 solution *initialize(instance *inst, int filled);

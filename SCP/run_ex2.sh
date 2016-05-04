@@ -70,7 +70,7 @@ for algo in "${algos[@]}"; do
         for run in {1..25}
         do
             destinationfile="$destinationfolder/$run.csv"
-            cost=$(eval "$1 --seed $run --instance $instance --$algo --mc $maxcost --co $cutoff --trace $destinationfile")
+            cost=$(eval "$1 --seed $((run+10000)) --instance $instance --$algo --mc $maxcost --co $cutoff --trace $destinationfile")
         done
     done < $2 3<"$4"
 done
