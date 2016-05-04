@@ -29,9 +29,11 @@ void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, 
             if (current_ant->x[set] || inst->dominated_set[set]) continue;
             denominator += pheromones_trails[set]*pow(heuristic_information(inst, current_ant, set), beta);
         }
-        for(i = 0; i < inst->n; i++) { // Calculate pdf itself
-            if (set_covers_element(inst, i, chosen_element) && !current_ant->x[i] && !inst->dominated_set[i]) {
-                pdf[i] = pheromones_trails[i]*pow(heuristic_information(inst, current_ant,i), beta) / denominator;
+        pdf = (double *) mymalloc(inst->ncol[chosen_element] * sizeof(double));
+        for(i = 0; i < inst->ncol[chosen_element]; i++) { // Calculate pdf itself
+            set = inst->col[chosen_element][i];
+            if (!current_ant->x[set] && !inst->dominated_set[i]) {
+                pdf[i] = (pheromones_trails[set]*pow(heuristic_information(inst, current_ant,set), beta)) / denominator;
             } else {
                 pdf[i] = 0;
             }
@@ -54,7 +56,7 @@ double heuristic_information(instance *inst, ant *current_ant, int set) {
 void update_pheromone_trails(instance *inst, ant *global_best, double *pheromone_trails, double ro, double tau_min, double tau_max) {
     int i;
     double delta_tau = (double) 1 / (double) global_best->fx;
-    for (i = 0; i < inst->n; i++) { // For each set
+    for (i = 0; i < inst->n; i++) {
         if (inst->dominated_set[i]) continue;
         pheromone_trails[i] = ro * pheromone_trails[i] + ((double) global_best->x[i] * delta_tau); // If the set is not in the solution, delta_tau_i = 0
         if (pheromone_trails[i] < tau_min) {
