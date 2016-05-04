@@ -32,7 +32,7 @@ int seed=1234567;
 char *scp_file="";
 
 /** Variables to activate algorithms **/
-int ch=0, bi=0, fi=0, re=0, ils=0, aco=0;
+int ch=0, bi=0, fi=0, re=0, ils=0, aco=0, iterations=0;
 double mt=0, mc=0, co=0;
 struct timeval *start_time = NULL;
 char *trace_file="";
@@ -191,7 +191,7 @@ int termination_criterion(solution *sol) {
         gettimeofday(start_time, NULL);
     }
     gettimeofday(&now, NULL);
-//    if (sol) printf("\r%f / %f %i", mdifftime(&now, start_time), mt, sol->fx);
+//    if (sol) printf("\rIteration %i:%f / %f %i", ++iterations, mdifftime(&now, start_time), mt, sol->fx);
 //    fflush(stdout);
     double time_elapsed = mdifftime(&now, start_time);
     return (mt && time_elapsed > mt) || (mc && ((sol && sol->fx <= mc) || time_elapsed > co));

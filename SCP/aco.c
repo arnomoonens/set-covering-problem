@@ -13,9 +13,9 @@ extern double heuristic_information(instance *inst, ant *current_ant, int set);
 
 /** Construction (SROM) phase of aco **/
 void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, double beta) {
-    int i, found_element, chosen_element, chosen_set, set;
+    int i, found_element, chosen_element, chosen_set_index, set;
     double denominator;
-    double *pdf = (double *) mymalloc(inst->n * sizeof(double));
+    double *pdf;
     while (uncovered_elements(inst, current_ant)) {
         found_element = 0;
         chosen_element = 0;
@@ -29,17 +29,19 @@ void aco_construct(instance *inst, ant *current_ant, double *pheromones_trails, 
             if (current_ant->x[set]) continue;
             denominator += pheromones_trails[set]*pow(heuristic_information(inst, current_ant, set), beta);
         }
-        for(i = 0; i < inst->n; i++) { // Calculate pdf itself
-            if (set_covers_element(inst, i, chosen_element) && !current_ant->x[i]) {
-                pdf[i] = (pheromones_trails[i]*pow(heuristic_information(inst, current_ant,i), beta)) / denominator;
+        pdf = (double *) mymalloc(inst->ncol[chosen_element] * sizeof(double));
+        for(i = 0; i < inst->ncol[chosen_element]; i++) { // Calculate pdf itself
+            set = inst->col[chosen_element][i];
+            if (!current_ant->x[set]) {
+                pdf[i] = (pheromones_trails[set]*pow(heuristic_information(inst, current_ant,set), beta)) / denominator;
             } else {
                 pdf[i] = 0;
             }
         }
-        chosen_set = random_with_pdf(pdf, inst->n);
-        add_set(inst, current_ant, chosen_set);
+        chosen_set_index = random_with_pdf(pdf, inst->n);
+        add_set(inst, current_ant, inst->col[chosen_element][chosen_set_index]);
+        free((void *) pdf);
     }
-    free((void *) pdf);
     return;
 }
 

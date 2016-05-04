@@ -4,32 +4,36 @@ args = commandArgs(trailingOnly=TRUE)
 if (length(args)<2) {
   stop("2 arguments needed. Usage: Rscript analysis.R PATH/TO/best-known.txt PATH/TO/RESULTS/DIRECTORY", call.=FALSE)
 }
-bestknown <- read.csv(args[1], header = FALSE, sep=" ", row.names = 1)
-colnames(bestknown) <- c("Cost")
 
 results.folder <- args[2]
 
-solutionquality <- function(df, best) 100 * (df$Cost - best$Cost) / best$Cost
+solutionquality <- function(df, best) 100 * (df - best) / best
 
 
 cat("Part 1: Solution qualities\n")
 filename.ils <- "ils.txt"
 filename.aco <- "aco.txt"
-result.ils <- read.table(paste0(results.folder, filename.ils), header = FALSE, sep = " ", row.names = 1)
-result.aco <- read.table(paste0(results.folder, filename.aco), header = FALSE, sep = " ", row.names = 1)
-colnames(result.ils) <- c("Cost")
-colnames(result.aco) <- c("Cost")
-filtered <- subset(bestknown, row.names(bestknown) %in% row.names(result.ils))
-solq.ils <- solutionquality(result.ils, filtered)
-solq.aco <- solutionquality(result.aco, filtered)
-cat("Config: ils; Average deviation: ", mean(solq.ils), "\n", sep="")
-cat("Config: aco; Average deviation: ", mean(solq.aco), "\n", sep="")
+costs <- read.table(paste0(results.folder, filename.ils), header = FALSE, sep = " ", row.names = 1)
+costs.aco <- read.table(paste0(results.folder, filename.aco), header = FALSE, sep = " ", row.names = 1)
+bestknown <- read.csv(args[1], header = FALSE, sep=" ", row.names = 1)
 
-plot(solq.ils, solq.aco, main="Correlation plot for ils and aco", xlab="Solution quality ILS", ylab="Solution quality ACO", sub=paste("Correlation coefficient: r=", cor(solq.ils, solq.aco)))
-model <- lm(solq.aco ~ solq.ils)
+colnames(costs) <- c("ils")
+filtered <- subset(bestknown, row.names(bestknown) %in% row.names(costs))
+costs$best <- filtered$V2
+costs$aco <- costs.aco$V2
+
+solution.qualities <- data.frame(row.names = row.names(costs))
+solution.qualities$ils <- solutionquality(costs$ils, costs$best)
+solution.qualities$aco <- solutionquality(costs$aco, costs$best)
+write.csv(solution.qualities, "solqs.csv")
+cat("Config: ils; Average deviation: ", mean(solution.qualities$ils), "\n", sep="")
+cat("Config: aco; Average deviation: ", mean(solution.qualities$aco), "\n", sep="")
+
+plot(solution.qualities$ils, solution.qualities$aco, main="Correlation plot for ils and aco", xlab="Solution quality ILS", ylab="Solution quality ACO", sub=paste("Correlation coefficient: r=", cor(solution.qualities$ils, solution.qualities$aco)))
+model <- lm(solution.qualities$aco ~ solution.qualities$ils)
 abline(model, col = "red")
 
-cat("P value when using Wilcoxon test: ", wilcox.test(solq.ils, solq.aco, paired=TRUE)$p.value, "\n", sep="")
+cat("P value when using Wilcoxon test: ", wilcox.test(solution.qualities$ils, solution.qualities$aco, paired=TRUE)$p.value, "\n", sep="")
 
 
 cat("Part 2: qualified RTDs\n")
@@ -69,7 +73,7 @@ plot_qrtd <- function(algo, instance) {
     y <- list()
     for(time in all.times) {
         x <- c(x, time)
-        res <- rtd(part2.results[[algo]], instance, time, bestknown[instance,]*1.02)
+        res <- rtd(part2.results[[algo]], instance, time, costs[instance,]$best*1.02)
         y <- c(y, res)
     }
     plot(x,y, xlab="Run-time (seconds)", ylab="P(solve)", main=paste0("Qualified run distribution for ", algo, " on instance ", instance), pch=NA, ylim=c(0,1))
