@@ -1,11 +1,11 @@
 #!/usr/bin/env Rscript
 
 args = commandArgs(trailingOnly=TRUE)
-if (length(args)<2) {
-  stop("2 arguments needed. Usage: Rscript analysis.R PATH/TO/best-known.txt PATH/TO/RESULTS/DIRECTORY", call.=FALSE)
+if (length(args)<3) {
+  stop("3 arguments needed. Usage: Rscript analysis.R PATH/TO/best-known.txt PATH/TO/maxtimes.txt PATH/TO/RESULTS/DIRECTORY", call.=FALSE)
 }
 
-results.folder <- args[2]
+results.folder <- args[3]
 
 solutionquality <- function(df, best) 100 * (df - best) / best
 
@@ -16,6 +16,8 @@ filename.aco <- "aco.txt"
 costs <- read.table(paste0(results.folder, filename.ils), header = FALSE, sep = " ", row.names = 1)
 costs.aco <- read.table(paste0(results.folder, filename.aco), header = FALSE, sep = " ", row.names = 1)
 bestknown <- read.csv(args[1], header = FALSE, sep=" ", row.names = 1)
+maxtimes <- read.csv(args[2], header = FALSE, sep = " ", row.names = 1)
+colnames(maxtimes) <- c("maxtime")
 
 colnames(costs) <- c("ils")
 filtered <- subset(bestknown, row.names(bestknown) %in% row.names(costs))
@@ -25,7 +27,6 @@ costs$aco <- costs.aco$V2
 solution.qualities <- data.frame(row.names = row.names(costs))
 solution.qualities$ils <- solutionquality(costs$ils, costs$best)
 solution.qualities$aco <- solutionquality(costs$aco, costs$best)
-write.csv(solution.qualities, "solqs.csv")
 cat("Config: ils; Average deviation: ", mean(solution.qualities$ils), "\n", sep="")
 cat("Config: aco; Average deviation: ", mean(solution.qualities$aco), "\n", sep="")
 
@@ -34,6 +35,15 @@ model <- lm(solution.qualities$aco ~ solution.qualities$ils)
 abline(model, col = "red")
 
 cat("P value when using Wilcoxon test: ", wilcox.test(solution.qualities$ils, solution.qualities$aco, paired=TRUE)$p.value, "\n", sep="")
+
+# Code to make the csv file for the appendix table
+tosave <- costs
+tosave$solq.ils <- solution.qualities$ils
+tosave$solq.aco <- solution.qualities$aco
+tosave$maxtime <- maxtimes$maxtime
+tosave <- tosave[c("best", "maxtime", "ils", "solq.ils", "aco", "solq.aco")]
+colnames(tosave) <- c("best cost", "maximum runtime", "ils cost", "ils solution quality", "aco cost", "aco solution quality")
+write.csv(format(tosave, digits=3), "results.csv", quote=FALSE)
 
 
 cat("Part 2: qualified RTDs\n")

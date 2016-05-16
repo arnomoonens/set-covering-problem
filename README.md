@@ -2,16 +2,47 @@
 Solving the set covering problem in _C_ using heuristic optimization.
 
 # Usage
-First the _C_ code needs to be compiled with a _C_ compiler. On _Mac OS X_ (with [_Apple Developer Tools_](http://developer.apple.com/technologies/tools/) installed) and _Ubuntu Linux_ (with _gcc_ installed), this can be done using the following command (when in the directory with the _C_ source code): `gcc -o lsscp main.c utils.h utils.c`. This should result in a binary file called `lsscp`.
- The resulting binary can then be called by some parameters. These are the following:
-
+First the _C_ code needs to be compiled with a _C_ compiler.
+On _Mac OS X_ (with _Apple Developer Tools_ installed) and _Ubuntu Linux_ (with _gcc_ installed), this can be done using the following command (when in the directory with the _C_ source code):
+```
+gcc *.c -o SCP
+```
+This should result in a binary file called `SCP`.
+ The resulting binary can then be called by some parameters. For this implementation exercise, the following are relevant:
 - `--seed SEED`: The `SEED` to use for the random number generator. If no value is provided, `1234567` is used as a seed.
 - `--instance path/to/instance`: The path to the instance file that needs to be used. This value is required.
-- `--ch1`, `--ch2`, `--ch3` or `--ch4`: Constructive method to be used to build the initial solution. Exactly one of these has to be provided.
-- `--re`: This optional parameter signals that redundancy elimination needs to be applied after the initial solution is constructed.
-- `--bi` or `--fi`: Whether to use respectively best improvement or first improvement. Maximally one of these parameters may be provided.
+- `--ils` or `--aco`: The implemented algorithm to use. On of these is needed to execute an algorithm implemented for this exercise.
+- `--mt`: Maximum time to run `--ils` or `--aco`.
+- `--mc`: Cost at which to stop iterating.
+- `--co`: Cut-off time when using `--mc`.
+- `--trace`: File to which better costs with their time of achieving needs to be written.
 
-It is also possible to execute all the possible configurations (which constructive method, redundancy elimination or not and possibly an improvement method) from exercise _1.1_ and _1.2_ on all the instances using a shell file called `run.sh`. These file should be called like this:
-`run.sh PATH/TO/BINARY PATH/TO/INSTANCES/DIRECTORY PATH/TO/RESULTS/DIRECTORY`. These are all relative paths. This file works as follows: for each configuration, the binary file is run with that configuration on each instance. Each execution gives us a cost of the resulting solution. For each instance, this cost is written to a file that describes the configuration, e.g. `ch1+re+bi.txt`. After a configuration is run on all the instances, the time that it took to be executed on all instances is written to a file with the time of each configuration in an exercise. These files are for exercise _1.1_ and _1.2_ respectively `ex11_durations.txt` and `ex12_durations.txt`.
+To execute the experiments, one first needs to calculate the maximum time that an algorithm may run. To calculate this and write the results to a file, the following command is needed:
+```
+  ./calculate_maxtimes.sh
+    PATH/TO/SCP
+    PATH/TO/INSTANCES/DIRECTORY
+    /PATH/TO/maxtimes.txt
+```
 
-When [software to execute _R_ code](https://www.r-project.org/) is installed, the file `analysis.R` can be executed to analyze the results obtained by running the `run.sh` file. In the command line, this can be called like this: `Rscript analysis.R PATH/TO/best-known.txt PATH/TO/RESULTS/DIRECTORY`. The results of this analysis are then printed to the command line.
+Once this is done, the bash file to execute the actual experiments can be run using the following command:
+```
+  ./run_ex2.sh
+    PATH/TO/SCP
+    /PATH/TO/maxtimes.txt
+    PATH/TO/INSTANCES/DIRECTORY
+    /PATH/TO/best-known.txt
+    PATH/TO/RESULTS/DIRECTORY
+```
+These are all relative paths. For the first experiment, each algorithm is run on each instance for a certain time, which is the one specified in `maxtimes.txt`. The resulting costs are then written to a text file specifically for that algorithm in the results directory.
+
+For the second experiment, both algorithms were run 25 times on instances _A.1_, _B.1_, _C.1_ and _D.1_. Using the necessary parameters, trace files were written to the results directory.
+
+When software to execute _R_ code is installed, the file `analysis\_ex2.R` can be executed to analyze the results obtained by running the `run\_ex2.sh` file. In the command line, this can be called like this:
+```
+Rscript analysis_ex2.R
+    PATH/TO/best-known.txt
+    /PATH/TO/maxtimes.txt
+    PATH/TO/RESULTS/DIRECTORY
+```
+The results of this analysis are then printed to the command line.
