@@ -38,7 +38,7 @@ These are all relative paths. For the first experiment, each algorithm is run on
 
 For the second experiment, both algorithms were run 25 times on instances _A.1_, _B.1_, _C.1_ and _D.1_. Using the necessary parameters, trace files were written to the results directory.
 
-When software to execute _R_ code is installed, the file `analysis\_ex2.R` can be executed to analyze the results obtained by running the `run\_ex2.sh` file. In the command line, this can be called like this:
+When software to execute _R_ code is installed, the file `analysis_ex2.R` can be executed to analyze the results obtained by running the `run_ex2.sh` file. In the command line, this can be called like this:
 ```
 Rscript analysis_ex2.R
     PATH/TO/best-known.txt
